@@ -1,0 +1,5129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schemata — Visual Schema Designer</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&family=Cutive+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0f14;
+  --surface: #161920;
+  --surface2: #1e2230;
+  --surface3: #252a3a;
+  --border: #2a2f42;
+  --accent: #4fffb0;
+  --accent2: #ff6b6b;
+  --accent3: #6b8aff;
+  --text: #e8eaf6;
+  --text2: #7c84a8;
+  --text3: #4a5070;
+  --card-header: #1a1f2e;
+  --shadow: 0 8px 32px rgba(0,0,0,0.5);
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Syne', sans-serif;
+}
+
+:root.light {
+  --bg: #f0f2f7;
+  --surface: #ffffff;
+  --surface2: #e8ebf4;
+  --surface3: #dde1ee;
+  --border: #c8cde0;
+  --accent: #00a36c;
+  --accent2: #d93025;
+  --accent3: #3d5af1;
+  --text: #1a1d2e;
+  --text2: #4a5280;
+  --text3: #8891b0;
+  --card-header: #f4f6fc;
+  --shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-mono);
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.logo {
+  font-family: 'Cutive Mono', 'Courier New', monospace;
+  font-weight: 400;
+  font-size: 17px;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+.logo span { color: var(--accent); font-weight: 700; }
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-left: 20px;
+}
+.tab {
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  font-family: var(--font-mono);
+}
+.tab:hover { color: var(--text); background: var(--surface2); }
+.tab.active { color: var(--accent); background: rgba(79,255,176,0.08); border-color: rgba(79,255,176,0.2); }
+
+.header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+.btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn:hover { background: var(--surface3); border-color: var(--text3); }
+.btn.primary { background: var(--accent); color: #000; border-color: var(--accent); }
+.btn.primary:hover { background: #3de89d; }
+.btn.danger { color: var(--accent2); border-color: rgba(255,107,107,0.3); }
+.btn.danger:hover { background: rgba(255,107,107,0.1); }
+
+/* Export dropdown */
+.export-dropdown {
+  position: relative;
+}
+.export-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  min-width: 160px;
+  z-index: 500;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.export-dropdown.open .export-dropdown-menu { display: block; }
+.export-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text2);
+  transition: all 0.1s;
+  white-space: nowrap;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.export-dropdown-item:hover { background: var(--surface2); color: var(--text); }
+.export-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* Theme toggle */
+.theme-toggle {
+  width: 30px; height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.theme-toggle:hover { background: var(--surface3); color: var(--text); border-color: var(--text3); }
+
+/* CANVAS AREA */
+.canvas-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.canvas-sheet {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+.canvas-sheet.active { display: block; }
+
+.canvas-viewport {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+}
+.canvas-viewport.panning { cursor: grabbing; }
+
+.canvas-world {
+  position: absolute;
+  width: 8000px;
+  height: 8000px;
+  transform-origin: 0 0;
+}
+
+/* Grid background */
+.canvas-viewport::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* SVG for relationship lines */
+.relations-svg {
+  position: absolute;
+  top: -4000px; left: -4000px;
+  width: 16000px; height: 16000px;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+.relations-svg .rel-group {
+  pointer-events: all;
+}
+
+/* TABLE CARDS */
+.table-card {
+  position: absolute;
+  width: max-content;
+  min-width: 260px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  user-select: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.table-card:hover { border-color: var(--accent3); box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(107,138,255,0.15); }
+.table-card.dragging { border-color: var(--accent); box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px var(--accent); }
+
+.table-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--card-header);
+  border-bottom: 1px solid var(--border);
+  border-radius: 10px 10px 0 0;
+  cursor: move;
+}
+.table-name-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--accent);
+  cursor: text;
+  min-width: 80px;
+}
+.table-name-input::placeholder { color: var(--text3); }
+
+.table-icon { font-size: 14px; }
+
+.card-actions { display: flex; gap: 4px; }
+.card-btn {
+  width: 22px; height: 22px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.card-btn:hover { background: var(--surface3); color: var(--text); }
+.card-btn.delete:hover { color: var(--accent2); }
+
+.table-fields { padding: 4px 0; }
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  transition: background 0.1s;
+  position: relative;
+}
+.field-row:hover { background: var(--surface2); }
+
+.field-drag-handle {
+  width: 14px;
+  height: 20px;
+  color: var(--text3);
+  cursor: grab;
+  font-size: 11px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0.4;
+  transition: opacity 0.1s;
+  touch-action: none;
+}
+.field-row:hover .field-drag-handle { opacity: 1; color: var(--text2); }
+.field-drag-handle:active { cursor: grabbing; }
+.field-row.drag-over-top { border-top: 2px solid var(--accent3); }
+.field-row.drag-over-bottom { border-bottom: 2px solid var(--accent3); }
+.field-row.dragging { opacity: 0.3; background: var(--surface2); }
+
+.field-flags {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.field-flag {
+  font-size: 8px;
+  font-weight: 700;
+  flex-shrink: 0;
+  cursor: pointer;
+  text-align: center;
+  border-radius: 3px;
+  padding: 1px 3px;
+  border: 1px solid transparent;
+  line-height: 1.4;
+  transition: all 0.12s;
+  user-select: none;
+}
+.field-flag:not(.active) { color: var(--text3); border-color: transparent; }
+.field-flag:hover:not(.active) { color: var(--text2); border-color: var(--border); }
+.field-flag.pk.active  { color: var(--accent);  border-color: rgba(79,255,176,0.35); background: rgba(79,255,176,0.08); }
+.field-flag.uq.active  { color: var(--accent3); border-color: rgba(107,138,255,0.35); background: rgba(107,138,255,0.08); }
+.field-flag.nn.active  { color: #f0b429;        border-color: rgba(240,180,41,0.35);  background: rgba(240,180,41,0.08); }
+.field-flag.an.active  { color: #e879f9;        border-color: rgba(232,121,249,0.35); background: rgba(232,121,249,0.08); }
+.an-badge { font-size: 9px; color: #e879f9; margin-left: 2px; font-weight: 700; }
+
+.field-name-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  min-width: 80px;
+  width: 80px; /* overridden by JS sizing */
+}
+.field-name-input::placeholder { color: var(--text3); }
+
+.field-type-select {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 4px;
+  outline: none;
+  cursor: pointer;
+  width: auto;
+}
+.field-type-select:focus { border-color: var(--accent3); }
+
+.field-del {
+  width: 16px; height: 16px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 3px;
+  opacity: 0;
+  transition: all 0.15s;
+}
+.field-row:hover .field-del { opacity: 1; }
+.field-del:hover { background: rgba(255,107,107,0.15); color: var(--accent2); }
+
+/* Relation anchor dots */
+.field-anchor-left, .field-anchor-right {
+  position: absolute;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+  border: 2px solid var(--surface2);
+  cursor: crosshair;
+  transition: all 0.15s;
+  z-index: 20;
+}
+.field-anchor-left { left: -5px; top: 50%; transform: translateY(-50%); }
+.field-anchor-right { right: -5px; top: 50%; transform: translateY(-50%); }
+.field-anchor-left:hover, .field-anchor-right:hover { background: var(--accent); border-color: var(--accent); transform: translateY(-50%) scale(1.3); }
+.field-anchor-left.dragging-from, .field-anchor-right.dragging-from { background: var(--accent); border-color: var(--accent); }
+
+.add-field-btn {
+  width: 100%;
+  padding: 7px 12px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border);
+  color: var(--text3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 0 0 10px 10px;
+  transition: all 0.15s;
+}
+.add-field-btn:hover { background: var(--surface2); color: var(--accent); }
+
+/* Relation SVG lines */
+.relation-line {
+  stroke: var(--accent3);
+  stroke-width: 1.5;
+  fill: none;
+  opacity: 0.7;
+}
+.relation-line:hover { opacity: 1; stroke-width: 2; }
+.temp-line { stroke: var(--accent); stroke-width: 1.5; fill: none; stroke-dasharray: 5,3; opacity: 0.8; }
+
+/* RIGHT PANEL */
+.right-panel {
+  position: fixed;
+  top: 52px;
+  right: -440px;
+  width: 440px;
+  bottom: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.right-panel.open { right: 0; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.panel-title { font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+
+.panel-tabs { display: flex; gap: 4px; padding: 12px 20px 0; flex-shrink: 0; }
+.panel-tab {
+  padding: 5px 12px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text2);
+  border: 1px solid transparent;
+  border-bottom: none;
+  transition: all 0.15s;
+}
+.panel-tab:hover { color: var(--text); }
+.panel-tab.active { color: var(--accent); background: var(--surface2); border-color: var(--border); }
+
+.panel-content {
+  flex: 1;
+  overflow: auto;
+  padding: 0 20px 20px;
+  background: var(--surface2);
+  margin: 0 0 0 0;
+  border-top: 1px solid var(--border);
+}
+
+.code-block {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre;
+  padding: 16px;
+  background: var(--bg);
+  border-radius: 8px;
+  margin-top: 16px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+}
+
+/* Floating toolbar */
+/* Status Bar */
+.status-bar {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 100;
+  padding: 0 8px;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--text3);
+}
+.status-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+.status-zoom {
+  padding: 0 10px;
+  min-width: 52px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text2);
+}
+.status-info {
+  flex: 1;
+  padding: 0 10px;
+  color: var(--text3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.status-rel-hint {
+  color: var(--accent2);
+  padding: 0 10px;
+  display: none;
+}
+.status-rel-hint.visible { display: block; }
+.toolbar-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex; align-items: center; gap: 5px;
+  height: 24px;
+}
+.toolbar-btn:hover { background: var(--surface2); color: var(--text); }
+.toolbar-btn.danger { color: var(--accent2); }
+.toolbar-btn.danger:hover { background: rgba(255,107,107,0.12); }
+.toolbar-btn.active { color: var(--accent); background: rgba(79,255,176,0.1); }
+
+/* DATA SHEET */
+.data-card {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  user-select: none;
+}
+.data-card:hover { border-color: var(--accent3); }
+.data-card.dragging { z-index: 50; border-color: var(--accent); }
+
+.data-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--card-header);
+  border-bottom: 1px solid var(--border);
+  border-radius: 10px 10px 0 0;
+  cursor: move;
+}
+.data-card-title { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--accent3); }
+.data-record-count { font-size: 10px; color: var(--text3); margin-left: auto; }
+
+.data-table-wrap { overflow-x: auto; }
+.data-table {
+  border-collapse: collapse;
+  font-size: 11px;
+  table-layout: fixed;
+}
+.data-table th {
+  padding: 6px 10px;
+  text-align: left;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+}
+.data-table th .pk-badge { color: var(--accent); font-size: 9px; }
+.data-table td {
+  padding: 0;
+  border-bottom: 1px solid rgba(42,47,66,0.5);
+}
+.data-cell-select {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--accent3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 18px 2px 4px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%236b8aff'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-size: 7px;
+  max-width: 100%;
+}
+.data-cell-select:focus { background-color: var(--surface2); outline: 1px solid var(--accent3); border-radius: 2px; }
+.data-cell-select option { background: var(--surface); color: var(--text); }
+.fk-cell { position: relative; }
+.fk-cell::before {
+  content: '↗';
+  position: absolute; left: 2px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 8px; color: var(--accent3); opacity: 0.5;
+  pointer-events: none;
+}
+
+.data-table td input {
+  width: 100%;
+  padding: 5px 8px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  box-sizing: border-box;
+  display: block;
+}
+.data-table td input:focus {
+  background: rgba(107,138,255,0.08);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr.new-row td input { color: var(--text3); }
+.data-table tr.new-row td input:focus { color: var(--text); }
+
+.data-table .row-num {
+  padding: 5px 8px;
+  color: var(--text3);
+  font-size: 10px;
+  width: 28px;
+  user-select: none;
+}
+.data-table .row-del {
+  width: 24px;
+  padding: 5px 4px;
+  text-align: center;
+}
+.row-del-btn {
+  background: transparent;
+  border: none;
+  color: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+.data-table tr:hover .row-del-btn { color: var(--text3); }
+.row-del-btn:hover { color: var(--accent2) !important; background: rgba(255,107,107,0.1); }
+
+.data-add-row {
+  width: 100%;
+  padding: 7px 12px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border);
+  color: var(--text3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 0 0 10px 10px;
+  transition: all 0.15s;
+}
+.data-add-row:hover { background: var(--surface2); color: var(--accent3); }
+
+/* Context menu */
+.ctx-menu {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  z-index: 1000;
+  min-width: 160px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  display: none;
+}
+.ctx-menu.show { display: block; }
+.ctx-item {
+  padding: 7px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text2);
+  transition: all 0.1s;
+}
+.ctx-item:hover { background: var(--surface2); color: var(--text); }
+.ctx-item.danger:hover { color: var(--accent2); }
+.ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* Relation label */
+.relation-label {
+  font-size: 9px;
+  fill: var(--text3);
+  font-family: var(--font-mono);
+}
+
+.rel-delete-btn {
+  cursor: pointer;
+  pointer-events: all;
+}
+.rel-delete-btn circle { fill: var(--surface); stroke: var(--border); }
+.rel-delete-btn text { fill: var(--text3); font-size: 9px; font-family: var(--font-mono); }
+.rel-delete-btn:hover circle { fill: var(--accent2); stroke: var(--accent2); }
+.rel-delete-btn:hover text { fill: white; }
+
+/* ===================== DATA CELL LOOKUP DROPDOWN ===================== */
+.dc-dropdown {
+  position: fixed;
+  z-index: 99999;
+  background: var(--surface);
+  border: 1px solid var(--accent3);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  min-width: 120px;
+  max-width: 280px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.dc-dropdown-item {
+  padding: 5px 10px;
+  cursor: pointer;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-bottom: 1px solid var(--border);
+}
+.dc-dropdown-item:last-child { border-bottom: none; }
+.dc-dropdown-item:hover, .dc-dropdown-item.active {
+  background: var(--surface2);
+  color: var(--text);
+}
+.dc-dropdown-item em {
+  color: var(--accent3);
+  font-style: normal;
+  font-weight: 700;
+}
+.dc-dropdown-empty {
+  padding: 7px 10px;
+  color: var(--text3);
+  font-style: italic;
+}
+
+/* ===================== SORT HEADERS ===================== */
+.sort-header {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.sort-header:hover { color: var(--accent3); }
+.sort-icon {
+  display: inline-block;
+  margin-left: 3px;
+  color: var(--accent3);
+  font-size: 10px;
+}
+
+/* ===================== DATASHEET MODE ===================== */
+#datasheet-table-wrap {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+#datasheet-table {
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+#datasheet-table th {
+  background: var(--surface);
+  position: sticky; top: 0; z-index: 3;
+  padding: 5px 10px;
+  border-bottom: 2px solid var(--border);
+  border-right: 1px solid var(--border);
+  text-align: left;
+  font-size: 10px; font-weight: 700;
+  color: var(--text2);
+  white-space: nowrap;
+  user-select: none;
+}
+#datasheet-table th:first-child { width: 32px; min-width: 32px; color: var(--text3); text-align: center; border-right: 2px solid var(--border); }
+#datasheet-table td {
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 0;
+  min-width: 80px;
+}
+#datasheet-table td:first-child {
+  text-align: center; color: var(--text3); font-size: 10px;
+  padding: 0 4px; width: 32px; min-width: 32px;
+  border-right: 2px solid var(--border);
+  background: var(--surface);
+  position: sticky; left: 0; z-index: 1;
+}
+#datasheet-table td:last-child { width: 28px; min-width: 28px; padding: 0; text-align: center; }
+#datasheet-table tr:hover td { background: rgba(107,138,255,0.04); }
+#datasheet-table tr:hover td:first-child { background: var(--surface); }
+#datasheet-table tr.ds-new-row td input, #datasheet-table tr.ds-new-row td select { color: var(--text3); }
+#datasheet-table tr.ds-new-row td input:focus, #datasheet-table tr.ds-new-row td select:focus { color: var(--text); }
+#datasheet-table input[type=text] {
+  width: 100%; box-sizing: border-box;
+  background: transparent; border: none; outline: none;
+  font-family: var(--font-mono); font-size: 11px; color: var(--text);
+  padding: 5px 8px; height: 28px;
+}
+#datasheet-table input[type=text]:focus {
+  background: var(--surface2);
+  outline: 1px solid var(--accent3);
+  border-radius: 2px;
+}
+#datasheet-table select.data-cell-select {
+  width: 100%; box-sizing: border-box;
+  background: transparent; border: none; outline: none;
+  font-family: var(--font-mono); font-size: 11px; color: var(--text);
+  padding: 5px 4px; height: 28px; cursor: pointer;
+}
+#datasheet-table select.data-cell-select:focus {
+  background: var(--surface2);
+  outline: 1px solid var(--accent3);
+  border-radius: 2px;
+}
+#datasheet-topbar select:focus { border-color: var(--accent3); outline: none; }
+
+/* ===================== QUERY BUILDER ===================== */
+.qb-shell {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+.qb-left {
+  width: 320px;
+  min-width: 200px;
+  max-width: 600px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.qb-resizer {
+  width: 5px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: transparent;
+  position: relative;
+  z-index: 10;
+  transition: background 0.15s;
+}
+.qb-resizer:hover, .qb-resizer.active { background: var(--accent3); opacity: 0.6; }
+.qb-section-title {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 8px 0 4px;
+}
+.qb-op-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.qb-op {
+  flex: 1;
+  padding: 5px 4px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s;
+  text-align: center;
+}
+.qb-op:hover { background: var(--surface3); color: var(--text); }
+.qb-op.active { background: var(--accent3); color: #fff; border-color: var(--accent3); }
+.qb-op[data-op="DELETE"].active { background: var(--accent2); border-color: var(--accent2); }
+.qb-select, .qb-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 5px 8px;
+  outline: none;
+  box-sizing: border-box;
+}
+.qb-select:focus, .qb-input:focus { border-color: var(--accent3); }
+.qb-panel { display: flex; flex-direction: column; gap: 4px; }
+.qb-col-list { display: flex; flex-direction: column; gap: 3px; max-height: 160px; overflow-y: auto; }
+.qb-col-check {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text2); cursor: pointer;
+  padding: 2px 0;
+}
+.qb-col-check input[type=checkbox] { accent-color: var(--accent3); cursor: pointer; }
+.qb-col-check:hover { color: var(--text); }
+.qb-where-row {
+  display: flex; align-items: center; gap: 4px; padding: 3px 0;
+}
+.qb-where-row select, .qb-where-row input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 5px;
+  outline: none;
+}
+.qb-where-row select:focus, .qb-where-row input:focus { border-color: var(--accent3); }
+.qb-where-col { flex: 2; min-width: 0; }
+.qb-where-op { width: 58px; flex-shrink: 0; }
+.qb-where-val { flex: 2; min-width: 0; }
+.qb-where-del {
+  width: 18px; height: 18px; flex-shrink: 0;
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 3px;
+}
+.qb-where-del:hover { color: var(--accent2); background: rgba(255,107,107,0.1); }
+.qb-add-btn {
+  font-size: 10px; font-family: var(--font-mono);
+  color: var(--accent3); background: none;
+  border: 1px dashed rgba(107,138,255,0.4);
+  border-radius: 5px; padding: 4px 8px;
+  cursor: pointer; transition: all 0.12s;
+  text-align: left;
+}
+.qb-add-btn:hover { background: rgba(107,138,255,0.08); border-color: var(--accent3); }
+.qb-row-inline { display: flex; gap: 6px; align-items: center; }
+.qb-flex { flex: 1; }
+.qb-field-row {
+  display: flex; align-items: center; gap: 6px; padding: 2px 0;
+}
+.qb-field-label { font-size: 10px; color: var(--text2); min-width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qb-field-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 6px;
+  outline: none;
+}
+.qb-field-input:focus { border-color: var(--accent3); }
+.qb-field-check { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text3); }
+.qb-field-check input { accent-color: var(--accent3); cursor: pointer; }
+.qb-join-row {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 6px 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 4px;
+  position: relative;
+}
+.qb-join-row-top { display: flex; align-items: center; gap: 4px; }
+.qb-join-type { width: 82px; flex-shrink: 0; }
+.qb-join-del {
+  position: absolute; top: 6px; right: 6px;
+  width: 18px; height: 18px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 3px;
+}
+.qb-join-del:hover { color: var(--accent2); background: rgba(255,107,107,0.1); }
+.qb-join-alias {
+  width: 58px; flex-shrink: 0;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--accent3); font-family: var(--font-mono);
+  font-size: 10px; padding: 3px 5px; outline: none;
+}
+.qb-join-alias:focus { border-color: var(--accent3); }
+.qb-join-alias::placeholder { color: var(--text3); font-style: italic; }
+.qb-join-on { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text3); }
+.qb-join-on select, .qb-join-on span { font-size: 10px; }
+.qb-join-on select {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text); font-family: var(--font-mono);
+  font-size: 10px; padding: 2px 4px; outline: none; flex: 1; min-width: 0;
+}
+.qb-join-on select:focus { border-color: var(--accent3); }
+.qb-subquery-wrap { display: flex; flex-direction: column; gap: 4px; }
+.qb-subquery-input {
+  width: 100%; box-sizing: border-box;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 5px; color: var(--text);
+  font-family: var(--font-mono); font-size: 10px;
+  padding: 6px 8px; outline: none; resize: vertical;
+  line-height: 1.5;
+}
+.qb-subquery-input:focus { border-color: var(--accent3); }
+.qb-warn {
+  font-size: 10px; color: var(--accent2);
+  background: rgba(255,107,107,0.08);
+  border: 1px solid rgba(255,107,107,0.2);
+  border-radius: 5px; padding: 6px 8px;
+  margin-top: 4px;
+}
+.qb-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.qb-output-header, .qb-history-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.qb-output-label { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
+.qb-output-wrap { flex: 1; overflow: auto; min-height: 0; background: var(--bg); }
+.qb-output {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  padding: 16px;
+  white-space: pre;
+  line-height: 1.6;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  display: block;
+}
+.qb-output:focus { background: rgba(107,138,255,0.03); }
+.qb-history { overflow-y: auto; max-height: 180px; background: var(--surface); }
+.qb-history-item {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  cursor: pointer;
+  transition: background 0.1s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.qb-history-item:hover { background: var(--surface2); color: var(--text); }
+.qb-history-empty { padding: 10px 12px; font-size: 11px; color: var(--text3); font-style: italic; }
+
+/* SQL syntax highlight colors */
+.qb-kw  { color: var(--accent3); font-weight: 700; }
+.qb-tbl { color: var(--accent); }
+.qb-col { color: #f0b429; }
+.qb-val { color: var(--accent2); }
+.qb-cmt { color: var(--text3); font-style: italic; }
+
+.qb-results-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.qb-results-count { font-size: 10px; color: var(--text3); }
+.qb-results-wrap { max-height: 260px; overflow: auto; background: var(--bg); flex-shrink: 0; }
+.qb-results-scroll { overflow: auto; }
+.qb-results-table {
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  min-width: 100%;
+}
+.qb-results-table th {
+  padding: 5px 12px;
+  background: var(--surface);
+  color: var(--text3);
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+  position: sticky; top: 0; z-index: 1;
+}
+.qb-results-table td {
+  padding: 4px 12px;
+  border-bottom: 1px solid rgba(42,47,66,0.4);
+  color: var(--text);
+  white-space: nowrap;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.qb-results-table tr:hover td { background: var(--surface2); }
+.qb-results-table td.null-val { color: var(--text3); font-style: italic; }
+.qb-results-table td.num-val { color: #f0b429; text-align: right; }
+.qb-exec-msg {
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.qb-exec-msg.success { color: var(--accent); }
+.qb-exec-msg.error   { color: var(--accent2); }
+.qb-exec-msg.warning { color: #f0b429; }
+
+/* ===================== GRID SHEET ===================== */
+.grid-shell {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.grid-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+.grid-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px;
+  height: 34px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.grid-cell-ref {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  min-width: 40px;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.grid-toolbar-sep { width: 1px; height: 16px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
+.grid-formula-label { color: var(--accent); font-size: 13px; font-weight: 700; padding: 0 4px 0 8px; flex-shrink: 0; }
+.grid-formula-bar {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  outline: none;
+  min-width: 0;
+}
+.grid-formula-bar:focus { border-color: var(--accent3); background: var(--surface3); }
+.grid-container { flex: 1; overflow: hidden; position: relative; outline: none; }
+
+.grid-wrap { position: absolute; inset: 0; overflow: hidden; background: var(--bg); }
+.grid-scroll { width: 100%; height: 100%; overflow: auto; outline: none; }
+
+/* Spreadsheet table */
+.sg-table { min-width: 100%; }
+.sg-table th, .sg-table td { border: 1px solid var(--border); padding: 0; }
+.sg-corner {
+  width: 40px; min-width: 40px;
+  background: var(--surface);
+  position: sticky; top: 0; left: 0;
+  z-index: 4;
+  border-right: 2px solid var(--border);
+  border-bottom: 2px solid var(--border);
+}
+.sg-col-header {
+  background: var(--surface);
+  position: sticky; top: 0; z-index: 3;
+  height: 26px;
+  font-size: 11px; font-weight: 600;
+  color: var(--text2);
+  text-align: left;
+  white-space: nowrap;
+  overflow: visible;
+  user-select: none;
+  min-width: 80px;
+  position: relative;
+}
+.sg-col-header.selected-col { background: rgba(107,138,255,0.12); color: var(--accent3); }
+.sg-col-resize {
+  position: absolute; right: -2px; top: 0; bottom: 0;
+  width: 6px; cursor: col-resize; z-index: 10;
+  background: transparent;
+  transition: background 0.1s;
+}
+.sg-col-resize:hover, .sg-col-resize.active { background: var(--accent3); opacity: 0.7; }
+.sg-col-header-inner {
+  padding: 4px 10px 4px 8px;
+  height: 100%;
+  display: flex; align-items: center;
+  overflow: hidden;
+}
+.sg-row-header {
+  background: var(--surface);
+  position: sticky; left: 0; z-index: 2;
+  width: 40px; min-width: 40px;
+  font-size: 10px; color: var(--text3);
+  text-align: center;
+  user-select: none;
+  border-right: 2px solid var(--border);
+}
+.sg-row-header.selected-row { background: rgba(107,138,255,0.1); color: var(--accent3); }
+.sg-cell {
+  position: relative;
+  min-width: 80px;
+  height: 26px;
+}
+.sg-cell.selected { background: rgba(107,138,255,0.1); outline: 2px solid var(--accent3); outline-offset: -2px; }
+.sg-cell.formula-cell { color: var(--accent3); }
+.sg-cell-display {
+  position: absolute; inset: 0;
+  padding: 3px 6px;
+  font-size: 11px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: cell;
+  display: flex; align-items: center;
+  line-height: 1;
+}
+.sg-cell-display.align-right { justify-content: flex-end; }
+.sg-cell-display.formula-result { color: var(--accent3); }
+.sg-cell-display.formula-error { color: var(--accent2); font-style: italic; }
+.sg-cell-input {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  padding: 3px 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  background: var(--surface3);
+  border: none;
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  display: none;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.notification {
+  position: fixed;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 12px;
+  color: var(--accent);
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.3s;
+  pointer-events: none;
+}
+.notification.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Schemata</div>
+  <div class="tabs">
+    <div class="tab" data-sheet="grid">⊞ Grid</div>
+    <div class="tab active" data-sheet="schema">⬡ Schema</div>
+    <div class="tab" data-sheet="data">⬢ Data</div>
+    <div class="tab" data-sheet="query">⬤ Query</div>
+  </div>
+  <div class="header-actions">
+    <button class="theme-toggle" id="btn-theme" title="Toggle light/dark theme">🌙</button>
+    <input type="file" id="file-import" accept=".json" style="display:none">
+    <button class="btn" id="btn-import-json">↑ Import</button>
+    <div class="export-dropdown" id="export-dropdown">
+      <button class="btn" id="btn-export">↓ Export ▾</button>
+      <div class="export-dropdown-menu">
+        <button class="export-dropdown-item" id="btn-export-json">{ } JSON Schema + Data</button>
+        <button class="export-dropdown-item" id="btn-export-sql">⬡ SQLite SQL</button>
+      </div>
+    </div>
+    <button class="btn primary" id="btn-add-table">＋ Table</button>
+  </div>
+</header>
+
+<div class="canvas-area">
+  <!-- SCHEMA SHEET -->
+  <div class="canvas-sheet active" id="sheet-schema">
+    <div class="canvas-viewport" id="viewport-schema">
+      <div class="canvas-world" id="world-schema">
+        <svg class="relations-svg" id="relations-svg"></svg>
+      </div>
+    </div>
+  </div>
+  <!-- QUERY SHEET -->
+  <div class="canvas-sheet" id="sheet-query">
+    <div class="qb-shell">
+      <!-- Left: builder panel -->
+      <div class="qb-left">
+        <div class="qb-section-title">Operation</div>
+        <div class="qb-op-row" id="qb-op-row">
+          <button class="qb-op active" data-op="SELECT">SELECT</button>
+          <button class="qb-op" data-op="INSERT">INSERT</button>
+          <button class="qb-op" data-op="UPDATE">UPDATE</button>
+          <button class="qb-op" data-op="DELETE">DELETE</button>
+        </div>
+
+        <div class="qb-section-title">Table</div>
+        <div class="qb-row-inline">
+          <select class="qb-select qb-flex" id="qb-table-select">
+            <option value="">— choose table —</option>
+          </select>
+          <input class="qb-input" id="qb-table-alias" placeholder="alias" style="width:64px" title="Table alias (optional)">
+        </div>
+
+        <!-- SELECT options -->
+        <div class="qb-panel" id="qb-panel-SELECT">
+          <div class="qb-section-title">Columns</div>
+          <div id="qb-col-list" class="qb-col-list"></div>
+
+          <div class="qb-section-title">JOIN</div>
+          <div id="qb-join-list"></div>
+          <button class="qb-add-btn" id="qb-add-join">+ Add JOIN</button>
+
+          <div class="qb-section-title">WHERE</div>
+          <div id="qb-where-list"></div>
+          <button class="qb-add-btn" id="qb-add-where">+ Add condition</button>
+
+          <div class="qb-section-title">Subquery <span style="font-size:9px;color:var(--text3);font-weight:400;text-transform:none">(replaces FROM)</span></div>
+          <div class="qb-subquery-wrap">
+            <textarea class="qb-subquery-input" id="qb-subquery" placeholder="SELECT … (leave blank to use table above)" spellcheck="false" rows="3"></textarea>
+            <input class="qb-input" id="qb-subquery-alias" placeholder="Alias (e.g. sub)" style="margin-top:4px">
+          </div>
+
+          <div class="qb-section-title">ORDER BY</div>
+          <div class="qb-row-inline">
+            <select class="qb-select qb-flex" id="qb-order-col"><option value="">—</option></select>
+            <select class="qb-select" id="qb-order-dir" style="width:80px">
+              <option>ASC</option><option>DESC</option>
+            </select>
+          </div>
+          <div class="qb-section-title">LIMIT</div>
+          <input class="qb-input" id="qb-limit" type="number" placeholder="no limit" min="1">
+        </div>
+
+        <!-- INSERT options -->
+        <div class="qb-panel" id="qb-panel-INSERT" style="display:none">
+          <div class="qb-section-title">Values</div>
+          <div id="qb-insert-fields"></div>
+        </div>
+
+        <!-- UPDATE options -->
+        <div class="qb-panel" id="qb-panel-UPDATE" style="display:none">
+          <div class="qb-section-title">SET</div>
+          <div id="qb-update-fields"></div>
+          <div class="qb-section-title">WHERE</div>
+          <div id="qb-update-where-list"></div>
+          <button class="qb-add-btn" id="qb-add-update-where">+ Add condition</button>
+        </div>
+
+        <!-- DELETE options -->
+        <div class="qb-panel" id="qb-panel-DELETE" style="display:none">
+          <div class="qb-section-title">WHERE</div>
+          <div id="qb-delete-where-list"></div>
+          <button class="qb-add-btn" id="qb-add-delete-where">+ Add condition</button>
+          <div class="qb-warn">⚠ Omitting WHERE deletes all rows</div>
+        </div>
+
+        <div style="padding:12px 0 0">
+          <button class="btn primary" id="qb-build-btn" style="width:100%">Build Query</button>
+        </div>
+      </div>
+
+      <!-- Right: output -->
+      <div class="qb-resizer" id="qb-resizer"></div>
+      <div class="qb-right">
+        <div class="qb-output-header">
+          <span class="qb-output-label">Generated SQL</span>
+          <div style="display:flex;gap:6px">
+            <button class="toolbar-btn" id="qb-copy-btn">⎘ Copy</button>
+            <button class="toolbar-btn" id="qb-execute-btn" style="color:var(--accent);border-color:rgba(79,255,176,0.3)">▶ Execute</button>
+            <button class="toolbar-btn" id="qb-clear-btn">✕ Clear</button>
+          </div>
+        </div>
+        <div class="qb-output-wrap">
+          <textarea class="qb-output" id="qb-output" spellcheck="false">-- Select a table and operation, then click Build Query</textarea>
+        </div>
+        <div class="qb-results-header" id="qb-results-header" style="display:none">
+          <span class="qb-output-label" id="qb-results-label">Results</span>
+          <span class="qb-results-count" id="qb-results-count"></span>
+        </div>
+        <div class="qb-results-wrap" id="qb-results-wrap" style="display:none">
+          <div class="qb-results-scroll" id="qb-results-scroll"></div>
+        </div>
+        <div class="qb-history-header">
+          <span class="qb-output-label">History</span>
+          <button class="toolbar-btn" id="qb-clear-history">✕ Clear history</button>
+        </div>
+        <div class="qb-history" id="qb-history"></div>
+      </div>
+    </div>
+  </div>
+  <!-- DATA SHEET -->
+  <div class="canvas-sheet" id="sheet-data">
+    <!-- Cards mode -->
+    <div id="data-cards-pane" style="display:flex;flex:1;height:100%;overflow:hidden;">
+      <div class="canvas-viewport" id="viewport-data">
+        <div class="canvas-world" id="world-data">
+        </div>
+      </div>
+    </div>
+    <!-- Datasheet mode -->
+    <div id="data-datasheet-pane" style="display:none;flex:1;flex-direction:column;height:100%;overflow:hidden;background:var(--bg);">
+      <div id="datasheet-topbar" style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">
+        <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Table</span>
+        <select id="datasheet-table-select" style="font-family:var(--font-mono);font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:3px 8px;outline:none;min-width:160px;">
+          <option value="">— select table —</option>
+        </select>
+        <div class="status-sep"></div>
+        <span id="datasheet-row-count" style="font-size:10px;color:var(--text3);"></span>
+        <div style="flex:1"></div>
+        <button class="toolbar-btn" id="datasheet-add-row-btn" style="display:none">+ Add Row</button>
+      </div>
+      <div id="datasheet-table-wrap" style="flex:1;overflow:auto;padding:0;">
+        <div id="datasheet-empty" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:13px;">Select a table above to view data</div>
+        <table id="datasheet-table" class="data-table" style="display:none;width:max-content;min-width:100%;">
+          <thead id="datasheet-thead"></thead>
+          <tbody id="datasheet-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- GRID SHEET -->
+  <div class="canvas-sheet" id="sheet-grid">
+    <div class="grid-shell">
+      <div class="grid-main">
+        <div class="grid-toolbar" id="grid-toolbar">
+          <button class="toolbar-btn" id="gb-add-row">+ Row</button>
+          <button class="toolbar-btn" id="gb-add-col">+ Column</button>
+          <div class="grid-toolbar-sep"></div>
+          <button class="toolbar-btn danger" id="gb-del-row">− Row</button>
+          <button class="toolbar-btn danger" id="gb-del-col">− Column</button>
+          <div class="grid-toolbar-sep"></div>
+          <span class="grid-formula-label">=</span>
+          <input class="grid-formula-bar" id="grid-formula-bar" placeholder="value or =SUM(A1:A10)…" spellcheck="false">
+          <div class="grid-toolbar-sep"></div>
+          <span class="grid-cell-ref" id="grid-cell-ref"></span>
+        </div>
+        <div class="grid-container" id="grid-container">
+          <div class="grid-wrap" id="grid-wrap">
+            <div class="grid-scroll" id="grid-scroll">
+              <table class="sg-table" id="sg-table" style="table-layout:fixed;border-collapse:collapse"></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Right Panel -->
+<div class="right-panel" id="right-panel">
+  <div class="panel-header">
+    <div class="panel-title" id="panel-title">Export</div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn" id="panel-copy">⎘ Copy</button>
+      <button class="btn" id="panel-download">↓ Download</button>
+      <button class="btn" id="panel-close">✕ Close</button>
+    </div>
+  </div>
+  <div class="panel-tabs">
+    <div class="panel-tab active" data-ptab="json">JSON</div>
+    <div class="panel-tab" data-ptab="sql">SQLite SQL</div>
+  </div>
+  <div class="panel-content">
+    <pre class="code-block" id="panel-code"></pre>
+  </div>
+</div>
+
+<!-- Status Bar -->
+<div class="status-bar" id="status-bar">
+  <!-- Schema-only controls -->
+  <div id="schema-toolbar" style="display:flex;align-items:center;gap:2px;">
+    <button class="toolbar-btn" id="tb-refresh-schema" title="Redraw all schema cards and relations">↺ Redraw</button>
+    <div class="status-sep"></div>
+    <button class="toolbar-btn" id="tb-snap" title="Snap cards to grid">⊟ Snap to Grid</button>
+    <div class="status-sep"></div>
+    <button class="toolbar-btn danger" id="tb-delete-sel" title="Delete selected relation">⊗ Del Relation</button>
+    <span class="status-rel-hint" id="rel-hint">· relation selected</span>
+    <div class="status-sep"></div>
+    <button class="toolbar-btn" id="tb-zoom-in" title="Zoom In">⊕</button>
+    <button class="toolbar-btn" id="tb-zoom-out" title="Zoom Out">⊖</button>
+    <button class="toolbar-btn" id="tb-reset" title="Reset View">⊡</button>
+    <button class="toolbar-btn" id="tb-fit" title="Fit All">⊞ Fit</button>
+    <div class="status-sep"></div>
+    <span class="status-zoom" id="zoom-indicator">100%</span>
+    <div class="status-sep"></div>
+  </div>
+  <!-- Data-only controls -->
+  <div id="data-toolbar" style="display:none;align-items:center;gap:2px;">
+    <button class="toolbar-btn active" id="tb-data-mode-cards" title="Card view">⊟ Cards</button>
+    <button class="toolbar-btn" id="tb-data-mode-sheet" title="Datasheet view">⊞ Datasheet</button>
+    <div class="status-sep"></div>
+    <button class="toolbar-btn" id="tb-refresh-data" title="Redraw all data cards and resize columns">↺ Redraw</button>
+    <div class="status-sep"></div>
+    <button class="toolbar-btn" id="tb-snap-data" title="Snap cards to grid">⊟ Snap to Grid</button>
+    <div class="status-sep"></div>
+    <button class="toolbar-btn" id="tb-align-h" title="Align all cards horizontal">⬛ Align H</button>
+    <button class="toolbar-btn" id="tb-align-v" title="Align all cards vertical">▐ Align V</button>
+    <div class="status-sep"></div>
+    <button class="toolbar-btn" id="tb-zoom-in-data" title="Zoom In">⊕</button>
+    <button class="toolbar-btn" id="tb-zoom-out-data" title="Zoom Out">⊖</button>
+    <button class="toolbar-btn" id="tb-reset-data" title="Reset View">⊡</button>
+    <button class="toolbar-btn" id="tb-fit-data" title="Fit All">⊞ Fit</button>
+    <div class="status-sep"></div>
+    <span class="status-zoom" id="zoom-indicator-data">100%</span>
+    <div class="status-sep"></div>
+  </div>
+  <span class="status-info" id="status-info">Ready</span>
+</div>
+
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" id="ctx-add-table">+ Add Table</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" id="ctx-clear">Clear All</div>
+</div>
+
+<div class="notification" id="notification"></div>
+
+<script>
+// ===================== STATE =====================
+const state = {
+  tables: {},   // id -> { id, name, x, y, fields: [{id,name,type,pk}] }
+  relations: [], // {id, fromTable, fromField, toTable, toField}
+  dataRecords: {}, // tableId -> [{fieldId: value, ...}]
+  dataCards: {}, // tableId -> {x, y}
+  nextId: 1,
+  currentSheet: 'schema',
+  selectedRelation: null,
+  snapEnabled: false,
+  lightTheme: false,
+};
+
+const FIELD_TYPES = ['TEXT','INTEGER','REAL','BLOB','BOOLEAN','DATE','DATETIME','VARCHAR'];
+const NUMERIC_TYPES = ['INTEGER','REAL','BOOLEAN'];
+
+function uid() { return 'id_' + (state.nextId++); }
+function notify(msg) {
+  const el = document.getElementById('notification');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ===================== VIEWPORT PANNING / ZOOM =====================
+function makeViewport(viewportEl, worldEl) {
+  let panX = 0, panY = 0, scale = 1;
+  let isPanning = false, startX, startY;
+
+  function applyTransform() {
+    worldEl.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + scale + ')';
+    if (viewportEl.id === 'viewport-schema') {
+      document.getElementById('zoom-indicator').textContent = Math.round(scale * 100) + '%';
+    } else if (viewportEl.id === 'viewport-data') {
+      const di = document.getElementById('zoom-indicator-data');
+      if (di) di.textContent = Math.round(scale * 100) + '%';
+    }
+  }
+
+  viewportEl.addEventListener('mousedown', e => {
+    if (e.target !== viewportEl && e.target !== worldEl && !e.target.classList.contains('relations-svg')) return;
+    if (e.button !== 0) return;
+    isPanning = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+    viewportEl.classList.add('panning');
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (!isPanning) return;
+    panX = e.clientX - startX;
+    panY = e.clientY - startY;
+    applyTransform();
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isPanning) { isPanning = false; viewportEl.classList.remove('panning'); }
+  });
+
+  viewportEl.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = viewportEl.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.max(0.15, Math.min(3, scale * delta));
+    panX = mx - (mx - panX) * (newScale / scale);
+    panY = my - (my - panY) * (newScale / scale);
+    scale = newScale;
+    applyTransform();
+  }, { passive: false });
+
+  return {
+    get scale() { return scale; },
+    get panX() { return panX; },
+    get panY() { return panY; },
+    setTransform(x, y, s) { panX = x; panY = y; scale = s; applyTransform(); },
+    zoomIn() { scale = Math.min(3, scale * 1.2); applyTransform(); },
+    zoomOut() { scale = Math.max(0.15, scale / 1.2); applyTransform(); },
+    reset() { panX = 40; panY = 40; scale = 1; applyTransform(); },
+    fit() {
+      const cards = Object.values(state.tables);
+      if (!cards.length) return;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      cards.forEach(t => { minX=Math.min(minX,t.x); minY=Math.min(minY,t.y); maxX=Math.max(maxX,t.x+240); maxY=Math.max(maxY,t.y+200); });
+      const rect = viewportEl.getBoundingClientRect();
+      const pw = rect.width, ph = rect.height;
+      const cw = maxX - minX, ch = maxY - minY;
+      scale = Math.min(3, Math.max(0.15, Math.min((pw - 80) / cw, (ph - 80) / ch)));
+      panX = (pw - cw * scale) / 2 - minX * scale;
+      panY = (ph - ch * scale) / 2 - minY * scale;
+      applyTransform();
+    }
+  };
+}
+
+const schemaVP = makeViewport(document.getElementById('viewport-schema'), document.getElementById('world-schema'));
+const dataVP = makeViewport(document.getElementById('viewport-data'), document.getElementById('world-data'));
+
+// Toolbar
+document.getElementById('tb-zoom-in').onclick = () => schemaVP.zoomIn();
+document.getElementById('tb-zoom-out').onclick = () => schemaVP.zoomOut();
+document.getElementById('tb-reset').onclick = () => schemaVP.reset();
+document.getElementById('tb-fit').onclick = () => schemaVP.fit();
+
+document.getElementById('tb-zoom-in-data').onclick = () => dataVP.zoomIn();
+document.getElementById('tb-zoom-out-data').onclick = () => dataVP.zoomOut();
+document.getElementById('tb-reset-data').onclick = () => dataVP.reset();
+document.getElementById('tb-fit-data').onclick = () => dataVP.fit();
+
+// ===================== TABLE CREATION =====================
+function createTable(x=100, y=100, name='') {
+  const id = uid();
+  state.tables[id] = {
+    id, name: name || 'table_' + id.split('_')[1],
+    x, y,
+    fields: [
+      { id: uid(), name: 'id', type: 'INTEGER', pk: true, unique: false, notNull: false }
+    ]
+  };
+  state.dataRecords[id] = [];
+  state.dataCards[id] = { x: Object.keys(state.tables).length * 40 + 20, y: 20 };
+  renderSchemaCard(state.tables[id]);
+  renderDataCard(id);
+  return id;
+}
+
+function deleteTable(id) {
+  state.relations = state.relations.filter(r => r.fromTable !== id && r.toTable !== id);
+  delete state.tables[id];
+  delete state.dataRecords[id];
+  delete state.dataCards[id];
+  document.getElementById('tc_' + id)?.remove();
+  document.getElementById('dc_' + id)?.remove();
+  renderAllRelations();
+}
+
+// ===================== SCHEMA CARD RENDERING =====================
+function renderSchemaCard(table) {
+  let card = document.getElementById('tc_' + table.id);
+  if (!card) {
+    card = document.createElement('div');
+    card.className = 'table-card';
+    card.id = 'tc_' + table.id;
+    document.getElementById('world-schema').appendChild(card);
+    bringToFront(card, false);
+  }
+  card.style.left = table.x + 'px';
+  card.style.top = table.y + 'px';
+
+  card.innerHTML = `
+    <div class="table-card-header" data-table-id="${table.id}">
+      <span class="table-icon">▦</span>
+      <input class="table-name-input" value="${escHtml(table.name)}" placeholder="table_name" data-table-id="${table.id}">
+      <div class="card-actions">
+        <button class="card-btn delete" title="Delete table" data-del-table="${table.id}">✕</button>
+      </div>
+    </div>
+    <div class="table-fields" id="fields_${table.id}">
+      ${table.fields.map(f => renderFieldRow(table.id, f)).join('')}
+    </div>
+    <button class="add-field-btn" data-add-field="${table.id}">+ Add field</button>
+  `;
+
+  makeDraggable(card, table);
+  bindCardEvents(card, table);
+  sizeAllInputsInCard(card);
+}
+
+function renderFieldRow(tableId, field) {
+  return `
+  <div class="field-row" id="fr_${field.id}" data-field-id="${field.id}" data-table-id="${tableId}">
+    <div class="field-anchor-left" data-anchor="left" data-field-id="${field.id}" data-table-id="${tableId}"></div>
+    <span class="field-drag-handle">⠿</span>
+    <div class="field-flags">
+      <span class="field-flag pk ${field.pk?'active':''}" title="Primary Key" data-flag="pk" data-field-id="${field.id}" data-table-id="${tableId}">PK</span>
+      <span class="field-flag uq ${field.unique?'active':''}" title="Unique" data-flag="unique" data-field-id="${field.id}" data-table-id="${tableId}">UQ</span>
+      <span class="field-flag nn ${field.notNull?'active':''}" title="Not Null" data-flag="notNull" data-field-id="${field.id}" data-table-id="${tableId}">NN</span>
+      <span class="field-flag an ${field.autonum?'active':''}" title="Autonumber — auto-increments on insert" data-flag="autonum" data-field-id="${field.id}" data-table-id="${tableId}">AN</span>
+    </div>
+    <input class="field-name-input" value="${escHtml(field.name)}" placeholder="field_name" data-field-name="${field.id}" data-table-id="${tableId}">
+    <select class="field-type-select" data-field-type="${field.id}" data-table-id="${tableId}">
+      ${FIELD_TYPES.map(t => `<option ${field.type===t?'selected':''}>${t}</option>`).join('')}
+    </select>
+    <button class="field-del" data-del-field="${field.id}" data-table-id="${tableId}">✕</button>
+    <div class="field-anchor-right" data-anchor="right" data-field-id="${field.id}" data-table-id="${tableId}"></div>
+  </div>`;
+}
+
+function rebuildFieldsDOM(tableId) {
+  const table = state.tables[tableId];
+  if (!table) return;
+  const container = document.getElementById('fields_' + tableId);
+  if (!container) return;
+  container.innerHTML = table.fields.map(f => renderFieldRow(tableId, f)).join('');
+  bindFieldEvents(container, tableId);
+  const _card = document.getElementById('tc_' + tableId);
+  if (_card) sizeAllInputsInCard(_card);
+  renderAllRelations();
+  syncDataCard(tableId);
+}
+
+// Bind once to the static card elements (header, add-field btn). Called only on initial card creation.
+function bindCardStaticEvents(card, table) {
+  // Table name
+  card.querySelector('.table-name-input').addEventListener('input', e => {
+    state.tables[table.id].name = e.target.value;
+    const dc = document.getElementById('dc_' + table.id);
+    if (dc) dc.querySelector('.data-card-title').textContent = e.target.value;
+    sizeInput(e.target, 80, 16);
+  });
+
+  // Delete table
+  card.querySelector(`[data-del-table="${table.id}"]`)?.addEventListener('click', () => {
+    if (confirm(`Delete table "${table.name}"?`)) deleteTable(table.id);
+  });
+
+  // Add field — bound once, never stacked
+  card.querySelector(`[data-add-field="${table.id}"]`)?.addEventListener('click', () => {
+    const field = { id: uid(), name: '', type: 'TEXT', pk: false, unique: false, notNull: false, autonum: false };
+    state.tables[table.id].fields.push(field);
+    rebuildFieldsDOM(table.id);
+  });
+}
+
+// Bind to the dynamic field rows inside the fields container. Safe to call on every rebuild.
+function bindFieldEvents(container, tableId) {
+  // Flag toggles (PK, UQ, NN)
+  container.querySelectorAll('[data-flag]').forEach(el => {
+    el.addEventListener('click', () => {
+      const fid = el.dataset.fieldId;
+      const flag = el.dataset.flag;
+      const field = state.tables[tableId]?.fields.find(f => f.id === fid);
+      if (field) { field[flag] = !field[flag]; rebuildFieldsDOM(tableId); }
+    });
+  });
+
+  // Field name
+  container.querySelectorAll('[data-field-name]').forEach(el => {
+    el.addEventListener('input', () => {
+      const f = state.tables[tableId]?.fields.find(f => f.id === el.dataset.fieldName);
+      if (f) { f.name = el.value; syncDataCard(tableId); }
+      sizeInput(el, 80, 12);
+    });
+  });
+
+  // Field type
+  container.querySelectorAll('[data-field-type]').forEach(el => {
+    el.addEventListener('change', () => {
+      const f = state.tables[tableId]?.fields.find(f => f.id === el.dataset.fieldType);
+      if (f) { f.type = el.value; syncDataCard(tableId); }
+    });
+  });
+
+  // Delete field
+  container.querySelectorAll('[data-del-field]').forEach(el => {
+    el.addEventListener('click', () => {
+      const fid = el.dataset.delField;
+      // Capture affected tables before removing the relation
+      const affectedTables = new Set([tableId]);
+      state.relations.filter(r => r.fromField === fid || r.toField === fid)
+        .forEach(r => { affectedTables.add(r.fromTable); affectedTables.add(r.toTable); });
+      state.tables[tableId].fields = state.tables[tableId].fields.filter(f => f.id !== fid);
+      state.relations = state.relations.filter(r => r.fromField !== fid && r.toField !== fid);
+      rebuildFieldsDOM(tableId);
+      renderAllRelations();
+      affectedTables.forEach(tid => syncDataCard(tid));
+    });
+  });
+
+  // Relation anchors
+  container.querySelectorAll('[data-anchor]').forEach(el => {
+    el.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      startRelationDrag(el.dataset.fieldId, el.dataset.tableId, e);
+    });
+  });
+
+  // Field drag-to-reorder via drag handle
+  container.querySelectorAll('.field-drag-handle').forEach(handle => {
+    handle.addEventListener('mousedown', e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const row = handle.closest('.field-row');
+      const dragFid = row?.dataset.fieldId;
+      if (!dragFid) return;
+
+      const table = state.tables[tableId];
+      if (!table) return;
+
+      // Create a floating ghost that follows the cursor
+      const ghost = document.createElement('div');
+      ghost.style.cssText = [
+        'position:fixed',
+        'pointer-events:none',
+        'z-index:99999',
+        'background:var(--surface2)',
+        'border:1px solid var(--accent3)',
+        'border-radius:4px',
+        'padding:3px 8px',
+        'font-family:var(--font-mono)',
+        'font-size:11px',
+        'color:var(--text)',
+        'opacity:0.9',
+        'white-space:nowrap',
+        'box-shadow:0 4px 12px rgba(0,0,0,0.4)',
+      ].join(';');
+      const f = table.fields.find(f => f.id === dragFid);
+      ghost.textContent = '⠿ ' + (f?.name || 'field');
+      document.body.appendChild(ghost);
+
+      row.classList.add('dragging');
+      document.body.style.cursor = 'grabbing';
+      document.body.style.userSelect = 'none';
+
+      let dropFid = null;
+      let dropPos = null;
+
+      function clearIndicators() {
+        container.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(r =>
+          r.classList.remove('drag-over-top', 'drag-over-bottom')
+        );
+      }
+
+      function onMove(e) {
+        // Move ghost
+        ghost.style.left = (e.clientX + 12) + 'px';
+        ghost.style.top  = (e.clientY - 10) + 'px';
+
+        clearIndicators();
+        dropFid = null; dropPos = null;
+
+        const others = [...container.querySelectorAll('.field-row:not(.dragging)')];
+        for (const el of others) {
+          const rect = el.getBoundingClientRect();
+          if (e.clientY >= rect.top - 4 && e.clientY <= rect.bottom + 4) {
+            dropPos = e.clientY < rect.top + rect.height / 2 ? 'top' : 'bottom';
+            dropFid = el.dataset.fieldId;
+            el.classList.add(dropPos === 'top' ? 'drag-over-top' : 'drag-over-bottom');
+            return;
+          }
+        }
+        // Snap to ends
+        if (others.length) {
+          const first = others[0].getBoundingClientRect();
+          const last  = others[others.length - 1].getBoundingClientRect();
+          if (e.clientY < first.top) {
+            dropFid = others[0].dataset.fieldId; dropPos = 'top';
+            others[0].classList.add('drag-over-top');
+          } else if (e.clientY > last.bottom) {
+            dropFid = others[others.length - 1].dataset.fieldId; dropPos = 'bottom';
+            others[others.length - 1].classList.add('drag-over-bottom');
+          }
+        }
+      }
+
+      function onUp() {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+        row.classList.remove('dragging');
+        clearIndicators();
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        ghost.remove();
+
+        if (!dropFid || dropFid === dragFid) return;
+
+        const fromIdx = table.fields.findIndex(f => f.id === dragFid);
+        let   toIdx   = table.fields.findIndex(f => f.id === dropFid);
+        if (fromIdx === -1 || toIdx === -1) return;
+
+        // Adjust target index based on drop position
+        if (dropPos === 'bottom') toIdx = toIdx + 1;
+        // Account for the removal of the dragged item
+        const insertIdx = toIdx > fromIdx ? toIdx - 1 : toIdx;
+
+        const [moved] = table.fields.splice(fromIdx, 1);
+        table.fields.splice(insertIdx, 0, moved);
+
+        rebuildFieldsDOM(tableId);
+        renderAllRelations();
+      }
+
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    });
+  });
+}
+
+// Keep old name as alias so renderSchemaCard still works
+function bindCardEvents(card, table) {
+  bindCardStaticEvents(card, table);
+  const container = document.getElementById('fields_' + table.id);
+  if (container) bindFieldEvents(container, table.id);
+}
+
+// ===================== CARD DRAGGING =====================
+let schemaZCounter = 10;
+let dataZCounter = 10;
+const GRID_SIZE = 32;
+function snap(val) {
+  return state.snapEnabled ? Math.round(val / GRID_SIZE) * GRID_SIZE : val;
+}
+
+function updateSnapButtons() {
+  ['tb-snap', 'tb-snap-data'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.toggle('active', state.snapEnabled);
+  });
+}
+
+function bringToFront(card, isData) {
+  const z = isData ? ++dataZCounter : ++schemaZCounter;
+  card.style.zIndex = z;
+}
+
+function makeDraggable(card, table) {
+  card.addEventListener('mousedown', () => bringToFront(card, false), true);
+  const header = card.querySelector('.table-card-header');
+  let isDragging = false, startX, startY, startLeft, startTop;
+
+  header.addEventListener('mousedown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+    e.preventDefault();
+    bringToFront(card, false);
+    isDragging = true;
+    card.classList.add('dragging');
+    const s = schemaVP.scale;
+    startX = e.clientX;
+    startY = e.clientY;
+    startLeft = table.x;
+    startTop = table.y;
+
+    function onMove(e) {
+      if (!isDragging) return;
+      table.x = snap(startLeft + (e.clientX - startX) / s);
+      table.y = snap(startTop + (e.clientY - startY) / s);
+      card.style.left = table.x + 'px';
+      card.style.top = table.y + 'px';
+      renderAllRelations();
+    }
+    function onUp() {
+      isDragging = false;
+      card.classList.remove('dragging');
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
+}
+
+function makeDataCardDraggable(card, tableId) {
+  card.addEventListener('mousedown', () => bringToFront(card, true), true);
+  const header = card.querySelector('.data-card-header');
+  let isDragging = false, startX, startY, startLeft, startTop;
+
+  header.addEventListener('mousedown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+    e.preventDefault();
+    bringToFront(card, true);
+    isDragging = true;
+    card.classList.add('dragging');
+    const s = dataVP.scale;
+    startX = e.clientX;
+    startY = e.clientY;
+    startLeft = state.dataCards[tableId].x;
+    startTop = state.dataCards[tableId].y;
+
+    function onMove(e) {
+      if (!isDragging) return;
+      state.dataCards[tableId].x = snap(startLeft + (e.clientX - startX) / s);
+      state.dataCards[tableId].y = snap(startTop + (e.clientY - startY) / s);
+      card.style.left = state.dataCards[tableId].x + 'px';
+      card.style.top = state.dataCards[tableId].y + 'px';
+    }
+    function onUp() {
+      isDragging = false;
+      card.classList.remove('dragging');
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
+}
+
+// ===================== RELATION DRAGGING =====================
+let relDrag = null;
+const tempLine = document.createElementNS('http://www.w3.org/2000/svg','path');
+tempLine.classList.add('temp-line');
+document.getElementById('relations-svg').appendChild(tempLine);
+
+function startRelationDrag(fieldId, tableId, e) {
+  e.preventDefault();
+  const anchorEl = document.querySelector(`#fr_${fieldId} [data-anchor]`);
+  relDrag = { fromField: fieldId, fromTable: tableId };
+  anchorEl && anchorEl.classList.add('dragging-from');
+
+  function getAnchorPos(fid) {
+    const fr = document.getElementById('fr_' + fid);
+    if (!fr) return null;
+    const worldRect = document.getElementById('world-schema').getBoundingClientRect();
+    const frRect = fr.getBoundingClientRect();
+    const s = schemaVP.scale;
+    return {
+      lx: (frRect.left - worldRect.left) / s + SVG_OFFSET,
+      ly: (frRect.top - worldRect.top + frRect.height/2) / s + SVG_OFFSET,
+      rx: (frRect.right - worldRect.left) / s + SVG_OFFSET,
+      ry: (frRect.top - worldRect.top + frRect.height/2) / s + SVG_OFFSET,
+    };
+  }
+
+  const fromPos = getAnchorPos(fieldId);
+
+  function onMove(e) {
+    if (!fromPos) return;
+    const worldRect = document.getElementById('world-schema').getBoundingClientRect();
+    const s = schemaVP.scale;
+    const mx = (e.clientX - worldRect.left) / s + SVG_OFFSET;
+    const my = (e.clientY - worldRect.top) / s + SVG_OFFSET;
+    const sx = (fromPos.lx + fromPos.rx) / 2;
+    const sy = fromPos.ly;
+    const path = bezierPath(sx, sy, mx, my, mx >= sx, false);
+    tempLine.setAttribute('d', path);
+  }
+
+  function onUp(e) {
+    tempLine.setAttribute('d', '');
+    document.querySelectorAll('.dragging-from').forEach(el => el.classList.remove('dragging-from'));
+    // Check if released on anchor
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    if (target && target.dataset.anchor && target.dataset.fieldId && target.dataset.tableId !== relDrag.fromTable) {
+      const toField = target.dataset.fieldId;
+      const toTable = target.dataset.tableId;
+      // avoid duplicate
+      const exists = state.relations.find(r =>
+        (r.fromField === relDrag.fromField && r.toField === toField) ||
+        (r.fromField === toField && r.toField === relDrag.fromField)
+      );
+      if (!exists) {
+        state.relations.push({ id: uid(), fromTable: relDrag.fromTable, fromField: relDrag.fromField, toTable, toField });
+        renderAllRelations();
+        // Refresh data cards for both tables so FK dropdowns appear
+        syncDataCard(relDrag.fromTable);
+        syncDataCard(toTable);
+        notify('Relation created!');
+      }
+    }
+    relDrag = null;
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+  }
+
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+}
+
+function bezierPath(x1, y1, x2, y2, fromRight, toRight) {
+  const dx = Math.max(60, Math.abs(x2 - x1) * 0.5);
+  const cp1x = fromRight ? x1 + dx : x1 - dx;
+  const cp2x = toRight   ? x2 + dx : x2 - dx;
+  return `M ${x1} ${y1} C ${cp1x} ${y1}, ${cp2x} ${y2}, ${x2} ${y2}`;
+}
+
+// ===================== RELATIONS RENDERING =====================
+const SVG_OFFSET = 4000; // matches the -4000px CSS offset on .relations-svg
+
+function getFieldAnchorPos(tableId, fieldId) {
+  const fr = document.getElementById('fr_' + fieldId);
+  const card = document.getElementById('tc_' + tableId);
+  if (!fr || !card) return null;
+
+  const world = document.getElementById('world-schema');
+  const worldRect = world.getBoundingClientRect();
+  const s = schemaVP.scale;
+
+  const frRect = fr.getBoundingClientRect();
+  const cardRect = card.getBoundingClientRect();
+
+  // Convert screen coords to world coords, then shift into SVG space
+  const ly = (frRect.top - worldRect.top + frRect.height / 2) / s + SVG_OFFSET;
+  const lx = (cardRect.left - worldRect.left) / s + SVG_OFFSET;
+  const rx = (cardRect.right - worldRect.left) / s + SVG_OFFSET;
+
+  return { lx, ly, rx, ry: ly };
+}
+
+function renderAllRelations() {
+  const svg = document.getElementById('relations-svg');
+  // Remove old relation elements
+  svg.querySelectorAll('.rel-group').forEach(el => el.remove());
+
+  updateStatusBar();
+  state.relations.forEach((rel, idx) => {
+    const fromPos = getFieldAnchorPos(rel.fromTable, rel.fromField);
+    const toPos = getFieldAnchorPos(rel.toTable, rel.toField);
+    if (!fromPos || !toPos) return;
+
+    const fromTable = state.tables[rel.fromTable];
+    const toTable = state.tables[rel.toTable];
+
+    // Determine exit sides: each card exits on the side facing the other card's center.
+    const fromMidX = (fromPos.lx + fromPos.rx) / 2;
+    const toMidX   = (toPos.lx   + toPos.rx)   / 2;
+    const dx = toMidX - fromMidX;
+
+    let sx, sy, ex, ey, fromRight, toRight;
+
+    // Check how much the cards overlap horizontally
+    const overlap = Math.min(fromPos.rx, toPos.rx) - Math.max(fromPos.lx, toPos.lx);
+    const fromWidth = fromPos.rx - fromPos.lx;
+    const toWidth   = toPos.rx   - toPos.lx;
+    const threshold = Math.min(fromWidth, toWidth) * 0.5;
+
+    if (overlap > threshold) {
+      // Heavily overlapping (stacked or same column): both exit right (loop around)
+      sx = fromPos.rx; sy = fromPos.ry; fromRight = true;
+      ex = toPos.rx;   ey = toPos.ly;   toRight   = true;
+    } else if (dx >= 0) {
+      // "to" table is to the right: from exits right, to enters left
+      sx = fromPos.rx; sy = fromPos.ry; fromRight = true;
+      ex = toPos.lx;   ey = toPos.ly;   toRight   = false;
+    } else {
+      // "to" table is to the left: from exits left, to enters right
+      sx = fromPos.lx; sy = fromPos.ly; fromRight = false;
+      ex = toPos.rx;   ey = toPos.ry;   toRight   = true;
+    }
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.classList.add('rel-group');
+    g.dataset.relId = rel.id;
+
+    const pathD = bezierPath(sx, sy, ex, ey, fromRight, toRight);
+
+    // Invisible wide hit-area for easy clicking
+    const hitPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+    hitPath.setAttribute('d', pathD);
+    hitPath.setAttribute('stroke', 'transparent');
+    hitPath.setAttribute('stroke-width', '16');
+    hitPath.setAttribute('fill', 'none');
+    hitPath.style.cursor = 'pointer';
+    hitPath.addEventListener('click', e => { e.stopPropagation(); selectRelation(rel.id); });
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.classList.add('relation-line');
+    path.setAttribute('d', pathD);
+    path.dataset.relId = rel.id;
+    path.style.pointerEvents = 'none';
+
+    // Dots
+    const dot1 = createSVGCircle(sx, sy, 5, rel.id);
+    const dot2 = createSVGCircle(ex, ey, 5, rel.id);
+
+    // Labels
+    const fromField = state.tables[rel.fromTable]?.fields.find(f => f.id === rel.fromField);
+    const toField = state.tables[rel.toTable]?.fields.find(f => f.id === rel.toField);
+    const mx = (sx + ex) / 2, my = (sy + ey) / 2;
+
+    const label = document.createElementNS('http://www.w3.org/2000/svg','text');
+    label.classList.add('relation-label');
+    label.setAttribute('x', mx);
+    label.setAttribute('y', my - 4);
+    label.setAttribute('text-anchor','middle');
+    label.textContent = `${fromField?.name||''} → ${toField?.name||''}`;
+
+    // Selected highlight
+    if (state.selectedRelation === rel.id) {
+      path.style.stroke = 'var(--accent2)';
+      path.style.strokeWidth = '2';
+      path.style.opacity = '1';
+    }
+
+    g.appendChild(hitPath);
+    g.appendChild(path);
+    g.appendChild(dot1);
+    g.appendChild(dot2);
+    g.appendChild(label);
+    svg.appendChild(g);
+  });
+}
+
+function createSVGCircle(cx, cy, r, relId) {
+  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.style.cursor = 'pointer';
+  g.addEventListener('click', e => { e.stopPropagation(); selectRelation(relId); });
+  // Invisible hit area
+  const hit = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  hit.setAttribute('cx', cx); hit.setAttribute('cy', cy); hit.setAttribute('r', r + 8);
+  hit.setAttribute('fill', 'transparent');
+  // Visible dot
+  const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', r);
+  c.style.fill = 'var(--accent3)';
+  g.appendChild(hit);
+  g.appendChild(c);
+  return g;
+}
+
+function selectRelation(id) {
+  state.selectedRelation = state.selectedRelation === id ? null : id;
+  renderAllRelations();
+  updateStatusBar();
+}
+
+function updateStatusBar() {
+  const hint = document.getElementById('rel-hint');
+  if (hint) hint.classList.toggle('visible', !!state.selectedRelation);
+  const tCount = Object.keys(state.tables).length;
+  const rCount = state.relations.length;
+  const countText = `${tCount} table${tCount !== 1 ? 's' : ''}  ·  ${rCount} relation${rCount !== 1 ? 's' : ''}`;
+  const info = document.getElementById('status-info');
+  if (info) info.textContent = countText;
+}
+
+function deleteSelectedRelation() {
+  if (!state.selectedRelation) return false;
+  const delRel = state.relations.find(r => r.id === state.selectedRelation);
+  state.relations = state.relations.filter(r => r.id !== state.selectedRelation);
+  state.selectedRelation = null;
+  renderAllRelations();
+  if (delRel) {
+    syncDataCard(delRel.fromTable);
+    syncDataCard(delRel.toTable);
+  }
+  notify('Relation deleted');
+  return true;
+}
+
+document.getElementById('tb-delete-sel').addEventListener('click', () => {
+  if (!deleteSelectedRelation()) notify('Select a relation line first');
+});
+
+// Delete key removes selected relation (only when not focused on an input/textarea)
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if (state.currentSheet !== 'schema') return;
+  if (state.selectedRelation) {
+    e.preventDefault();
+    deleteSelectedRelation();
+  }
+});
+
+// Click outside deselects relation
+document.getElementById('relations-svg').addEventListener('click', e => {
+  if (e.target === e.currentTarget || e.target.tagName === 'svg') {
+    state.selectedRelation = null;
+    renderAllRelations();
+  }
+});
+
+// ===================== SORT STATE (transient — not saved) =====================
+// sortState: tableId -> { fieldId: string, dir: 'asc'|'desc'|null }
+const sortState = {};
+
+// Resolve the display label for a FK value (mirrors buildFKOptions logic)
+function fkDisplayLabel(fkRef, rawVal) {
+  const refTable = state.tables[fkRef.refTableId];
+  if (!refTable) return String(rawVal ?? '');
+  const refField   = refTable.fields.find(f => f.id === fkRef.refFieldId);
+  const dispField  = refTable.fields.find(f =>
+    /^(name|title|label|username|email|display)$/i.test(f.name)
+  ) || refTable.fields.find(f => f.id !== fkRef.refFieldId) || refTable.fields[0];
+  const records = state.dataRecords[fkRef.refTableId] || [];
+  const row = records.find(r => refField && String(r[refField.id]) === String(rawVal ?? ''));
+  if (!row) return String(rawVal ?? '');
+  if (dispField && dispField.id !== refField?.id) return String(row[dispField.id] ?? rawVal);
+  return String(rawVal ?? '');
+}
+
+function getSortedRecords(tableId) {
+  const records = state.dataRecords[tableId] || [];
+  const ss = sortState[tableId];
+  if (!ss || !ss.dir || !ss.fieldId) return records;
+  const table = state.tables[tableId];
+  const field = table?.fields.find(f => f.id === ss.fieldId);
+  if (!field) return records;
+  const fkRef = getFKRef(tableId, field.id);
+  const isNum = !fkRef && NUMERIC_TYPES.includes(field.type);
+  return [...records].sort((a, b) => {
+    let av, bv;
+    if (fkRef) {
+      // Sort by the human-readable label, not the raw FK id
+      av = fkDisplayLabel(fkRef, a[ss.fieldId]).toLowerCase();
+      bv = fkDisplayLabel(fkRef, b[ss.fieldId]).toLowerCase();
+    } else {
+      av = a[ss.fieldId]; bv = b[ss.fieldId];
+      if (av == null || av === '') av = isNum ? -Infinity : '';
+      if (bv == null || bv === '') bv = isNum ? -Infinity : '';
+      if (isNum) { av = Number(av); bv = Number(bv); }
+      else { av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); }
+    }
+    const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+    return ss.dir === 'asc' ? cmp : -cmp;
+  });
+}
+
+function cycleSortState(tableId, fieldId) {
+  const ss = sortState[tableId];
+  if (!ss || ss.fieldId !== fieldId) {
+    sortState[tableId] = { fieldId, dir: 'asc' };
+  } else if (ss.dir === 'asc') {
+    sortState[tableId] = { fieldId, dir: 'desc' };
+  } else {
+    sortState[tableId] = { fieldId: null, dir: null };
+  }
+}
+
+function sortIcon(tableId, fieldId) {
+  const ss = sortState[tableId];
+  if (!ss || ss.fieldId !== fieldId || !ss.dir) return '';
+  return ss.dir === 'asc' ? ' ↑' : ' ↓';
+}
+
+// ===================== DATA COLUMN SIZING =====================
+const DATA_COL_PAD = 20;   // horizontal padding inside each cell
+const DATA_COL_MIN = 48;   // minimum column width px
+const DATA_COL_MAX = 280;  // maximum column width px
+
+function measureDataText(text) {
+  // reuse the existing _ruler, set to data-table font
+  _ruler.style.font = '11px JetBrains Mono, monospace';
+  _ruler.textContent = text != null ? String(text) : '';
+  return _ruler.offsetWidth;
+}
+
+function autoSizeDataTable(card, tableId) {
+  const table = state.tables[tableId];
+  const records = state.dataRecords[tableId] || [];
+  const tbl = card.querySelector('.data-table');
+  if (!tbl || !table) return;
+
+  // fixed columns: # (row num) and delete button
+  const ROW_NUM_W = 28;
+  const DEL_W = 24;
+
+  // For each data field, find the max content width
+  const colWidths = table.fields.map(f => {
+    // header: field name (slightly bolder — add a bit extra)
+    let max = measureDataText(formatColName(f.name)) + 4;
+
+    const fkRef = getFKRef(tableId, f.id);
+    if (fkRef) {
+      // FK dropdown — measure every option label
+      const refTable = state.tables[fkRef.refTableId];
+      const refRecords = state.dataRecords[fkRef.refTableId] || [];
+      const refField = refTable?.fields.find(fi => fi.id === fkRef.refFieldId);
+      const displayField = refTable?.fields.find(fi =>
+        /^(name|title|label|username|email|display)$/i.test(fi.name)
+      ) || refTable?.fields.find(fi => fi.id !== fkRef.refFieldId) || refTable?.fields[0];
+
+      max = Math.max(max, measureDataText('— none —'));
+      refRecords.forEach(r => {
+        const val = refField ? String(r[refField.id] ?? '') : '';
+        const label = displayField && displayField.id !== fkRef.refFieldId
+          ? String(r[displayField.id] ?? val)
+          : val;
+        const text = label !== val ? label + ' (' + val + ')' : label;
+        // extra ~24px for the native select arrow
+        max = Math.max(max, measureDataText(text) + 24);
+      });
+    } else {
+      // plain input — measure all row values
+      records.forEach(r => {
+        const v = r[f.id] !== undefined ? r[f.id] : '';
+        max = Math.max(max, measureDataText(String(v)));
+      });
+      max = Math.max(max, measureDataText(formatColName(f.name)));
+    }
+
+    return Math.min(DATA_COL_MAX, Math.max(DATA_COL_MIN, max + DATA_COL_PAD));
+  });
+
+  // Build / replace colgroup
+  let cg = tbl.querySelector('colgroup');
+  if (cg) cg.remove();
+  cg = document.createElementNS ? document.createElement('colgroup') : document.createElement('colgroup');
+  
+  const mkCol = w => { const c = document.createElement('col'); c.style.width = w + 'px'; return c; };
+  cg.appendChild(mkCol(ROW_NUM_W));
+  colWidths.forEach(w => cg.appendChild(mkCol(w)));
+  cg.appendChild(mkCol(DEL_W));
+  tbl.insertBefore(cg, tbl.firstChild);
+}
+
+// ===================== FOCUS HELPERS =====================
+// Returns the first input/select in a new-row <tr> that is NOT an autonumber field.
+// Falls back to the very first input if all fields are autonumber.
+function firstFocusableInRow(trEl, tableId) {
+  if (!trEl) return null;
+  const table = state.tables[tableId];
+  const inputs = [...trEl.querySelectorAll('input[type=text], select')];
+  if (!table) return inputs[0] || null;
+  // Find first input whose field is not autonumber
+  const nonAuto = inputs.find(inp => {
+    const fid = inp.dataset.newfield || inp.dataset.field;
+    if (!fid) return true; // unknown field — allow focus
+    const field = table.fields.find(f => f.id === fid);
+    return !field?.autonum;
+  });
+  return nonAuto || inputs[0] || null;
+}
+
+// ===================== AUTONUMBER INSERT =====================
+// Central insert function: fills autonum fields before storing.
+// All three insert paths (data card, datasheet, SQL execute) go through here.
+function nextAutonumVal(tableId, fieldId) {
+  const records = state.dataRecords[tableId] || [];
+  let max = 0;
+  records.forEach(r => {
+    const v = Number(r[fieldId]);
+    if (!isNaN(v) && v > max) max = v;
+  });
+  return max + 1;
+}
+
+function insertDataRow(tableId, record) {
+  const table = state.tables[tableId];
+  if (!table) return;
+  if (!state.dataRecords[tableId]) state.dataRecords[tableId] = [];
+  // Fill autonum fields: only set if the record didn't supply a non-empty value
+  table.fields.forEach(f => {
+    if (f.autonum && (record[f.id] === '' || record[f.id] === null || record[f.id] === undefined)) {
+      record[f.id] = nextAutonumVal(tableId, f.id);
+    }
+  });
+  state.dataRecords[tableId].push(record);
+}
+
+// ===================== DATA CARDS =====================
+function renderDataCard(tableId) {
+  const table = state.tables[tableId];
+  if (!table) return;
+  let card = document.getElementById('dc_' + tableId);
+  if (!card) {
+    card = document.createElement('div');
+    card.className = 'data-card';
+    card.id = 'dc_' + tableId;
+    document.getElementById('world-data').appendChild(card);
+    if (!state.dataCards[tableId]) state.dataCards[tableId] = { x: 20, y: 20 };
+    card.style.left = state.dataCards[tableId].x + 'px';
+    card.style.top = state.dataCards[tableId].y + 'px';
+    bringToFront(card, true);
+  }
+  rebuildDataCardContent(card, tableId);
+  makeDataCardDraggable(card, tableId);
+}
+
+function rebuildDataCardContent(card, tableId) {
+  const table = state.tables[tableId];
+  const records = state.dataRecords[tableId] || [];
+  const sorted = getSortedRecords(tableId);
+
+  const headerCols = table.fields.map(f => {
+    const icon = sortIcon(tableId, f.id);
+    const pk = f.pk ? '<span class="pk-badge">PK</span>' : '';
+    const an = f.autonum ? '<span class="an-badge">AN</span>' : '';
+    return `<th><span class="sort-header" data-sort-field="${f.id}" data-sort-table="${tableId}" title="${f.type}">${pk}${an}${escHtml(formatColName(f.name))}${icon ? '<span class="sort-icon">' + icon + '</span>' : ''}</span></th>`;
+  }).join('');
+
+  card.innerHTML = `
+    <div class="data-card-header">
+      <span style="font-size:14px">▦</span>
+      <span class="data-card-title">${escHtml(table.name)}</span>
+      <span class="data-record-count">${records.length} row${records.length!==1?'s':''}</span>
+    </div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:28px">#</th>
+            ${headerCols}
+            <th style="width:24px"></th>
+          </tr>
+        </thead>
+        <tbody id="dtbody_${tableId}">
+          ${sorted.map((r, i) => renderDataRow(tableId, i, r, table.fields)).join('')}
+          ${renderNewRow(tableId, table.fields)}
+        </tbody>
+      </table>
+    </div>
+    <button class="data-add-row" data-add-row="${tableId}">+ Add row</button>
+  `;
+
+  // Wire sort header clicks
+  card.querySelectorAll('.sort-header[data-sort-field]').forEach(el => {
+    el.addEventListener('click', () => {
+      cycleSortState(el.dataset.sortTable, el.dataset.sortField);
+      rebuildDataCardContent(card, tableId);
+      makeDataCardDraggable(card, tableId);
+      autoSizeDataTable(card, tableId);
+    });
+  });
+
+  bindDataCardEvents(card, tableId);
+  makeDataCardDraggable(card, tableId);
+  autoSizeDataTable(card, tableId);
+}
+
+// Returns FK info for a field: { refTableId, refFieldId } or null
+// Only the fromField side is a foreign key — toField is the referenced PK and stays a plain input
+function getFKRef(tableId, fieldId) {
+  const rel = state.relations.find(r => r.fromTable === tableId && r.fromField === fieldId);
+  if (rel) return { refTableId: rel.toTable, refFieldId: rel.toField };
+  return null;
+}
+
+// Build <option> list for a FK field
+function buildFKOptions(fkRef, currentVal) {
+  const refTable = state.tables[fkRef.refTableId];
+  if (!refTable) return '';
+  const records = state.dataRecords[fkRef.refTableId] || [];
+  // Find the display field: prefer name/title/label, fallback to refField itself
+  const displayField = refTable.fields.find(f =>
+    /^(name|title|label|username|email|display)$/i.test(f.name)
+  ) || refTable.fields.find(f => f.id !== fkRef.refFieldId) || refTable.fields[0];
+  const refField = refTable.fields.find(f => f.id === fkRef.refFieldId);
+  if (!refField) return '';
+
+  let opts = '<option value="">— none —</option>';
+  records.forEach(r => {
+    const val = r[refField.id] !== undefined ? r[refField.id] : '';
+    const label = displayField && displayField.id !== refField.id
+      ? String(r[displayField.id] || val)
+      : String(val);
+    const sel = String(val) === String(currentVal) ? ' selected' : '';
+    opts += '<option value="' + escAttr(String(val)) + '"' + sel + '>' + escHtml(label) + (label !== String(val) ? ' (' + escHtml(String(val)) + ')' : '') + '</option>';
+  });
+  return opts;
+}
+
+function renderDataRow(tableId, idx, record, fields) {
+  return '<tr data-row-idx="' + idx + '">' +
+    '<td class="row-num">' + (idx+1) + '</td>' +
+    fields.map(f => {
+      const val = record[f.id] !== undefined ? record[f.id] : '';
+      const fkRef = getFKRef(tableId, f.id);
+      if (fkRef) {
+        return '<td class="fk-cell"><select class="data-cell-select" data-row="' + idx + '" data-field="' + f.id + '" data-table="' + tableId + '" data-fk="1">' +
+          buildFKOptions(fkRef, val) +
+          '</select></td>';
+      }
+      return '<td><input type="text" value="' + escAttr(String(val)) + '" data-row="' + idx + '" data-field="' + f.id + '" data-table="' + tableId + '"></td>';
+    }).join('') +
+    '<td class="row-del"><button class="row-del-btn" data-del-row="' + idx + '" data-table="' + tableId + '">✕</button></td>' +
+    '</tr>';
+}
+
+function renderNewRow(tableId, fields) {
+  return '<tr class="new-row" id="newrow_' + tableId + '">' +
+    '<td class="row-num">*</td>' +
+    fields.map(f => {
+      const fkRef = getFKRef(tableId, f.id);
+      if (fkRef) {
+        return '<td class="fk-cell"><select class="data-cell-select" data-newfield="' + f.id + '" data-newtable="' + tableId + '" data-fk="1">' +
+          buildFKOptions(fkRef, '') +
+          '</select></td>';
+      }
+      if (f.autonum) {
+        return '<td><input type="text" placeholder="auto" data-newfield="' + f.id + '" data-newtable="' + tableId + '" style="color:var(--text3);font-style:italic" title="Autonumber — leave blank to auto-assign"></td>';
+      }
+      return '<td><input type="text" placeholder="' + escAttr(f.name) + '" data-newfield="' + f.id + '" data-newtable="' + tableId + '"></td>';
+    }).join('') +
+    '<td></td></tr>';
+}
+
+// ===================== DATA CELL LOOKUP DROPDOWN =====================
+let _dcDrop = null;      // current dropdown DOM element
+let _dcDropInput = null; // input that owns it
+let _dcDropActive = -1;  // keyboard-selected index
+
+function dcCloseDrop() {
+  if (_dcDrop) { _dcDrop.remove(); _dcDrop = null; }
+  _dcDropInput = null;
+  _dcDropActive = -1;
+}
+
+function dcHighlight(idx) {
+  if (!_dcDrop) return;
+  const items = _dcDrop.querySelectorAll('.dc-dropdown-item');
+  items.forEach((el, i) => el.classList.toggle('active', i === idx));
+  if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
+  _dcDropActive = idx;
+}
+
+function dcBuildDrop(inp, tableId, fieldId) {
+  dcCloseDrop();
+  _dcDropInput = inp;
+
+  const query = inp.value.trim().toLowerCase();
+  const records = state.dataRecords[tableId] || [];
+
+  // Collect unique existing values for this field
+  const seen = new Set();
+  const vals = [];
+  records.forEach(r => {
+    const v = r[fieldId];
+    const s = v !== undefined && v !== null && v !== '' ? String(v) : null;
+    if (s && !seen.has(s)) { seen.add(s); vals.push(s); }
+  });
+
+  // Filter by query
+  const matches = query
+    ? vals.filter(v => v.toLowerCase().includes(query))
+    : vals;
+
+  if (!matches.length) { _dcDrop = null; return; }
+
+  const drop = document.createElement('div');
+  drop.className = 'dc-dropdown';
+
+  matches.slice(0, 20).forEach((v, i) => {
+    const item = document.createElement('div');
+    item.className = 'dc-dropdown-item';
+    // Highlight matching substring
+    if (query) {
+      const lo = v.toLowerCase(), qi = lo.indexOf(query);
+      if (qi !== -1) {
+        item.innerHTML =
+          escHtml(v.slice(0, qi)) +
+          '<em>' + escHtml(v.slice(qi, qi + query.length)) + '</em>' +
+          escHtml(v.slice(qi + query.length));
+      } else {
+        item.textContent = v;
+      }
+    } else {
+      item.textContent = v;
+    }
+    item.addEventListener('mousedown', e => {
+      e.preventDefault(); // don't blur the input
+      inp.value = v;
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+      inp.dispatchEvent(new Event('change', { bubbles: true }));
+      dcCloseDrop();
+    });
+    drop.appendChild(item);
+  });
+
+  // Position below the input
+  const rect = inp.getBoundingClientRect();
+  drop.style.left   = rect.left + 'px';
+  drop.style.top    = (rect.bottom + 2) + 'px';
+  drop.style.minWidth = rect.width + 'px';
+
+  document.body.appendChild(drop);
+  _dcDrop = drop;
+  _dcDropActive = -1;
+}
+
+function dcAttachToInput(inp, tableId, fieldId) {
+  inp.setAttribute('autocomplete', 'off');
+
+  inp.addEventListener('focus', () => dcBuildDrop(inp, tableId, fieldId));
+  inp.addEventListener('input', () => dcBuildDrop(inp, tableId, fieldId));
+
+  inp.addEventListener('keydown', e => {
+    if (!_dcDrop) return;
+    const items = _dcDrop.querySelectorAll('.dc-dropdown-item');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      dcHighlight(Math.min(_dcDropActive + 1, items.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      dcHighlight(Math.max(_dcDropActive - 1, 0));
+    } else if (e.key === 'Enter' && _dcDropActive >= 0) {
+      e.preventDefault();
+      items[_dcDropActive]?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    } else if (e.key === 'Escape') {
+      dcCloseDrop();
+    }
+  });
+
+  inp.addEventListener('blur', () => setTimeout(dcCloseDrop, 150));
+}
+
+// Close on scroll / resize
+document.addEventListener('scroll', dcCloseDrop, true);
+window.addEventListener('resize', dcCloseDrop);
+
+function bindDataCardEvents(card, tableId) {
+  // Row inputs
+  card.querySelectorAll('[data-row][data-field]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const row = parseInt(inp.dataset.row);
+      const fid = inp.dataset.field;
+      const table = state.tables[tableId];
+      const field = table?.fields.find(f => f.id === fid);
+      let val = inp.value;
+      if (field && NUMERIC_TYPES.includes(field.type)) val = inp.value === '' ? '' : Number(inp.value);
+      if (state.dataRecords[tableId][row]) {
+        state.dataRecords[tableId][row][fid] = val;
+      }
+      updateRecordCount(tableId);
+      autoSizeDataTable(card, tableId);
+    });
+    // Attach lookup dropdown to plain text inputs (not FK selects)
+    if (inp.tagName === 'INPUT' && !inp.dataset.fk) {
+      dcAttachToInput(inp, tableId, inp.dataset.field);
+    }
+  });
+
+  // Also attach to new-row inputs
+  card.querySelectorAll('[data-newfield]').forEach(inp => {
+    if (inp.tagName === 'INPUT' && !inp.dataset.fk) {
+      dcAttachToInput(inp, tableId, inp.dataset.newfield);
+    }
+  });
+
+  // New row inputs — commit on any field losing focus or pressing Enter
+  function commitNewRow() {
+    const table = state.tables[tableId];
+    if (!table) return;
+    const newInputs = card.querySelectorAll('[data-newfield]');
+    const record = {};
+    let hasValue = false;
+    newInputs.forEach(inp => {
+      const fid = inp.dataset.newfield;
+      const field = table.fields.find(f => f.id === fid);
+      let val = inp.value;
+      if (val !== '' && val !== '— none —') hasValue = true;
+      if (field && NUMERIC_TYPES.includes(field.type)) val = val === '' ? '' : Number(val);
+      record[fid] = val;
+    });
+    if (!hasValue) return;
+    insertDataRow(tableId, record);
+    rebuildDataCardContent(card, tableId);
+    makeDataCardDraggable(card, tableId);
+  }
+
+  card.querySelectorAll('[data-newfield]').forEach(inp => {
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') commitNewRow(); });
+    inp.addEventListener('blur', () => {
+      // Only commit if no other new field is focused
+      setTimeout(() => {
+        const focused = card.querySelector('[data-newfield]:focus');
+        if (!focused) commitNewRow();
+      }, 100);
+    });
+  });
+
+  // Add row button
+  card.querySelector(`[data-add-row="${tableId}"]`)?.addEventListener('click', () => {
+    commitNewRow();
+    // focus first non-autonumber input of the new row
+    setTimeout(() => {
+      const newRow = card.querySelector('tbody tr:last-child');
+      const first = firstFocusableInRow(newRow, tableId);
+      if (first) first.focus();
+    }, 20);
+  });
+
+  // Delete row
+  card.querySelectorAll('[data-del-row]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!confirm('Delete this row?')) return;
+      const idx = parseInt(btn.dataset.delRow);
+      state.dataRecords[tableId].splice(idx, 1);
+      rebuildDataCardContent(card, tableId);
+      makeDataCardDraggable(card, tableId);
+    });
+  });
+}
+
+function updateRecordCount(tableId) {
+  const card = document.getElementById('dc_' + tableId);
+  if (!card) return;
+  const count = (state.dataRecords[tableId]||[]).length;
+  const el = card.querySelector('.data-record-count');
+  if (el) el.textContent = `${count} row${count!==1?'s':''}`;
+}
+
+function syncDataCard(tableId) {
+  const card = document.getElementById('dc_' + tableId);
+  if (card) {
+    rebuildDataCardContent(card, tableId);
+    makeDataCardDraggable(card, tableId);
+  }
+  // Also refresh datasheet if it's showing this table
+  if (typeof dataMode !== 'undefined' && dataMode === 'sheet' && DS.tableId === tableId) {
+    dsRenderTable(tableId);
+  }
+  if (typeof dataMode !== 'undefined' && dataMode === 'sheet') {
+    dsPopulateTableSelect();
+  }
+}
+
+// ===================== EXPORT =====================
+function generateJSON() {
+  const out = {
+    _tableforge: true,
+    version: 1,
+    tables: Object.values(state.tables).map(t => ({
+      id: t.id,
+      name: t.name,
+      x: Math.round(t.x),
+      y: Math.round(t.y),
+      fields: t.fields.map(f => ({ id: f.id, name: f.name, type: f.type, pk: !!f.pk, unique: !!f.unique, notNull: !!f.notNull, autonum: !!f.autonum }))
+    })),
+    relations: state.relations.map(r => ({
+      id: r.id,
+      fromTable: r.fromTable,
+      fromField: r.fromField,
+      toTable: r.toTable,
+      toField: r.toField
+    })),
+    data: Object.fromEntries(
+      Object.entries(state.dataRecords).map(([tid, rows]) => [tid, rows])
+    ),
+    dataCards: Object.fromEntries(
+      Object.entries(state.dataCards).map(([tid, pos]) => [tid, { x: Math.round(pos.x), y: Math.round(pos.y) }])
+    )
+  };
+  return JSON.stringify(out, null, 2);
+}
+
+function generateSQL() {
+  let sql = '-- Generated by Schemata\n-- SQLite Schema\n\n';
+  sql += 'PRAGMA foreign_keys = ON;\n\n';
+
+  Object.values(state.tables).forEach(t => {
+    sql += `CREATE TABLE IF NOT EXISTS \`${t.name}\` (\n`;
+    const cols = t.fields.map(f => {
+      let def = `  \`${f.name}\` ${f.type}`;
+      if (f.pk) def += ' PRIMARY KEY';
+      if (!f.pk && f.notNull) def += ' NOT NULL';
+      if (!f.pk && f.unique) def += ' UNIQUE';
+      return def;
+    });
+
+    // Foreign keys
+    const fks = state.relations
+      .filter(r => r.fromTable === t.id)
+      .map(r => {
+        const fromField = t.fields.find(f => f.id === r.fromField);
+        const toTable = state.tables[r.toTable];
+        const toField = toTable?.fields.find(f => f.id === r.toField);
+        if (!fromField || !toTable || !toField) return null;
+        return `  FOREIGN KEY (\`${fromField.name}\`) REFERENCES \`${toTable.name}\`(\`${toField.name}\`)`;
+      }).filter(Boolean);
+
+    sql += [...cols, ...fks].join(',\n');
+    sql += '\n);\n\n';
+  });
+
+  // Insert data
+  Object.values(state.tables).forEach(t => {
+    const records = state.dataRecords[t.id] || [];
+    if (!records.length) return;
+    const fieldNames = t.fields.map(f => `\`${f.name}\``).join(', ');
+    sql += `-- Data for ${t.name}\n`;
+    records.forEach(r => {
+      const vals = t.fields.map(f => {
+        const v = r[f.id];
+        if (v === '' || v === undefined || v === null) return 'NULL';
+        if (NUMERIC_TYPES.includes(f.type)) return isNaN(Number(v)) ? `'${String(v).replace(/'/g,"''")}'` : v;
+        return `'${String(v).replace(/'/g,"''")}'`;
+      });
+      sql += `INSERT INTO \`${t.name}\` (${fieldNames}) VALUES (${vals.join(', ')});\n`;
+    });
+    sql += '\n';
+  });
+
+  return sql;
+}
+
+// Panel
+let activePanelTab = 'json';
+
+function showPanel(type) {
+  activePanelTab = type;
+  const panel = document.getElementById('right-panel');
+  panel.classList.add('open');
+  renderPanel();
+}
+
+function renderPanel() {
+  document.querySelectorAll('.panel-tab').forEach(t => t.classList.toggle('active', t.dataset.ptab === activePanelTab));
+  const code = activePanelTab === 'json' ? generateJSON() : generateSQL();
+  document.getElementById('panel-code').textContent = code;
+}
+
+// Export dropdown toggle
+const exportDropdown = document.getElementById('export-dropdown');
+document.getElementById('btn-export').addEventListener('click', e => {
+  e.stopPropagation();
+  exportDropdown.classList.toggle('open');
+});
+document.addEventListener('click', () => exportDropdown.classList.remove('open'));
+
+document.getElementById('btn-export-json').addEventListener('click', () => {
+  exportDropdown.classList.remove('open');
+  showPanel('json');
+});
+document.getElementById('btn-export-sql').addEventListener('click', () => {
+  exportDropdown.classList.remove('open');
+  showPanel('sql');
+});
+document.getElementById('panel-close').addEventListener('click', () => document.getElementById('right-panel').classList.remove('open'));
+
+document.getElementById('panel-copy').addEventListener('click', () => {
+  const text = document.getElementById('panel-code').textContent;
+  navigator.clipboard.writeText(text).then(() => notify('Copied to clipboard!')).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    notify('Copied to clipboard!');
+  });
+});
+
+document.getElementById('panel-download').addEventListener('click', () => {
+  const isJson = activePanelTab === 'json';
+  const text = document.getElementById('panel-code').textContent;
+  const blob = new Blob([text], { type: isJson ? 'application/json' : 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = isJson ? 'tableforge-schema.json' : 'tableforge-schema.sql';
+  a.click();
+  URL.revokeObjectURL(url);
+  notify(isJson ? 'JSON downloaded!' : 'SQL downloaded!');
+});
+document.querySelectorAll('.panel-tab').forEach(t => {
+  t.addEventListener('click', () => { activePanelTab = t.dataset.ptab; renderPanel(); });
+});
+
+// ===================== THEME =====================
+(function() {
+  const btn = document.getElementById('btn-theme');
+  const root = document.documentElement;
+  btn.addEventListener('click', () => {
+    state.lightTheme = !state.lightTheme;
+    root.classList.toggle('light', state.lightTheme);
+    btn.textContent = state.lightTheme ? '☀️' : '🌙';
+    btn.title = state.lightTheme ? 'Switch to dark theme' : 'Switch to light theme';
+  });
+})();
+
+// ===================== IMPORT =====================
+function clearAll(silent) {
+  Object.keys(state.tables).forEach(id => {
+    document.getElementById('tc_' + id)?.remove();
+    document.getElementById('dc_' + id)?.remove();
+  });
+  state.tables = {};
+  state.relations = [];
+  state.dataRecords = {};
+  state.dataCards = {};
+  state.selectedRelation = null;
+  schemaZCounter = 10;
+  dataZCounter = 10;
+  renderAllRelations();
+}
+
+function importFromJSON(json) {
+  let data;
+  try { data = JSON.parse(json); } catch(e) { alert('Invalid JSON: ' + e.message); return; }
+
+  if (!data._tableforge || !Array.isArray(data.tables)) {
+    alert('Not a valid Schemata JSON file.'); return;
+  }
+
+  if (Object.keys(state.tables).length > 0) {
+    if (!confirm('This will replace the current project. Continue?')) return;
+  }
+
+  clearAll(true);
+
+  // Restore nextId so new IDs don't collide
+  let maxNum = state.nextId;
+  data.tables.forEach(t => {
+    const num = parseInt((t.id || '').replace('id_', ''));
+    if (!isNaN(num) && num >= maxNum) maxNum = num + 1;
+    t.fields.forEach(f => {
+      const fn = parseInt((f.id || '').replace('id_', ''));
+      if (!isNaN(fn) && fn >= maxNum) maxNum = fn + 1;
+    });
+  });
+  (data.relations || []).forEach(r => {
+    const rn = parseInt((r.id || '').replace('id_', ''));
+    if (!isNaN(rn) && rn >= maxNum) maxNum = rn + 1;
+  });
+  state.nextId = maxNum;
+
+  // Restore tables
+  data.tables.forEach(t => {
+    state.tables[t.id] = {
+      id: t.id,
+      name: t.name,
+      x: t.x || 100,
+      y: t.y || 100,
+      fields: (t.fields || []).map(f => ({
+        id: f.id,
+        name: f.name,
+        type: f.type || 'TEXT',
+        pk: !!f.pk,
+        autonum: !!f.autonum,
+        unique: !!f.unique,
+        notNull: !!f.notNull
+      }))
+    };
+    state.dataRecords[t.id] = (data.data && data.data[t.id]) ? data.data[t.id] : [];
+    state.dataCards[t.id] = (data.dataCards && data.dataCards[t.id]) ? data.dataCards[t.id] : { x: 40, y: 40 };
+  });
+
+  // Restore relations
+  state.relations = (data.relations || []).map(r => ({
+    id: r.id,
+    fromTable: r.fromTable,
+    fromField: r.fromField,
+    toTable: r.toTable,
+    toField: r.toField
+  })).filter(r => state.tables[r.fromTable] && state.tables[r.toTable]);
+
+  // Render everything
+  Object.values(state.tables).forEach(t => {
+    renderSchemaCard(t);
+    renderDataCard(t.id);
+  });
+
+  // Sync data card positions
+  Object.values(state.tables).forEach(t => {
+    const dc = document.getElementById('dc_' + t.id);
+    if (dc) {
+      dc.style.left = state.dataCards[t.id].x + 'px';
+      dc.style.top = state.dataCards[t.id].y + 'px';
+      syncDataCard(t.id);
+    }
+  });
+
+  renderAllRelations();
+  notify('Project imported successfully!');
+}
+
+document.getElementById('btn-import-json').addEventListener('click', () => {
+  document.getElementById('file-import').value = '';
+  document.getElementById('file-import').click();
+});
+
+document.getElementById('file-import').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => importFromJSON(ev.target.result);
+  reader.readAsText(file);
+});
+
+// ===================== DATA CARD ALIGNMENT =====================
+function alignDataCards(axis) {
+  const ids = Object.keys(state.tables);
+  if (ids.length < 2) { notify('Need at least 2 tables to align'); return; }
+
+  if (axis === 'horizontal') {
+    // Same top — use the topmost card's top as reference, then space out horizontally
+    const minY = Math.min(...ids.map(id => state.dataCards[id]?.y ?? 0));
+    let curX = Math.min(...ids.map(id => state.dataCards[id]?.x ?? 0));
+    // Sort left to right by current X so order is preserved
+    const sorted = [...ids].sort((a, b) => (state.dataCards[a]?.x ?? 0) - (state.dataCards[b]?.x ?? 0));
+    sorted.forEach(id => {
+      const card = document.getElementById('dc_' + id);
+      if (!card) return;
+      state.dataCards[id].y = minY;
+      state.dataCards[id].x = curX;
+      card.style.top  = minY + 'px';
+      card.style.left = curX + 'px';
+      curX += card.offsetWidth + 24;
+    });
+    notify('Aligned horizontally');
+  } else {
+    // Same left — use the leftmost card's left as reference, then space out vertically
+    const minX = Math.min(...ids.map(id => state.dataCards[id]?.x ?? 0));
+    let curY = Math.min(...ids.map(id => state.dataCards[id]?.y ?? 0));
+    // Sort top to bottom by current Y so order is preserved
+    const sorted = [...ids].sort((a, b) => (state.dataCards[a]?.y ?? 0) - (state.dataCards[b]?.y ?? 0));
+    sorted.forEach(id => {
+      const card = document.getElementById('dc_' + id);
+      if (!card) return;
+      state.dataCards[id].x = minX;
+      state.dataCards[id].y = curY;
+      card.style.left = minX + 'px';
+      card.style.top  = curY + 'px';
+      curY += card.offsetHeight + 16;
+    });
+    notify('Aligned vertically');
+  }
+}
+
+document.getElementById('tb-align-h').addEventListener('click', () => alignDataCards('horizontal'));
+document.getElementById('tb-align-v').addEventListener('click', () => alignDataCards('vertical'));
+
+// Refresh / redraw buttons
+document.getElementById('tb-refresh-schema').addEventListener('click', () => {
+  Object.keys(state.tables).forEach(tid => rebuildFieldsDOM(tid));
+  renderAllRelations();
+  notify('Schema redrawn');
+});
+
+document.getElementById('tb-refresh-data').addEventListener('click', () => {
+  Object.keys(state.tables).forEach(tid => {
+    const card = document.getElementById('dc_' + tid);
+    if (card) {
+      rebuildDataCardContent(card, tid);
+      makeDataCardDraggable(card, tid);
+    }
+  });
+  notify('Data cards redrawn');
+});
+
+// Snap toggle — both buttons control the same shared state
+['tb-snap', 'tb-snap-data'].forEach(id => {
+  document.getElementById(id)?.addEventListener('click', () => {
+    state.snapEnabled = !state.snapEnabled;
+    updateSnapButtons();
+    notify(state.snapEnabled ? 'Snap to grid on' : 'Snap to grid off');
+  });
+});
+
+// ===================== QUERY BUILDER PANEL RESIZER =====================
+(function() {
+  const resizer  = document.getElementById('qb-resizer');
+  const qbLeft   = resizer?.previousElementSibling;
+  if (!resizer || !qbLeft) return;
+
+  let startX = 0, startW = 0;
+
+  resizer.addEventListener('mousedown', e => {
+    e.preventDefault();
+    startX = e.clientX;
+    startW = qbLeft.getBoundingClientRect().width;
+    resizer.classList.add('active');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    function onMove(e) {
+      const newW = Math.max(200, Math.min(600, startW + (e.clientX - startX)));
+      qbLeft.style.width = newW + 'px';
+    }
+    function onUp() {
+      resizer.classList.remove('active');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
+})();
+
+// ===================== GRID SPREADSHEET =====================
+const GRID_ROWS = 100;
+const GRID_COLS = 26;
+
+// freeGrid state: 2D array [row][col] of raw strings
+if (!state.freeGrid) state.freeGrid = {
+  cells: {},      // "R,C" -> raw string value
+  colWidths: {},  // col index -> px
+  rowHeights: {}, // row index -> px (future)
+  selRow: 0,
+  selCol: 0,
+  selRow2: 0,     // selection end (for range)
+  selCol2: 0,
+};
+const fg = state.freeGrid;
+
+function colLabel(c) {
+  // 0->A, 1->B, ..., 25->Z, 26->AA, etc.
+  let s = '';
+  let n = c;
+  do { s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26) - 1; } while (n >= 0);
+  return s;
+}
+function cellKey(r, c) { return r + ',' + c; }
+function cellAddr(r, c) { return colLabel(c) + (r + 1); }
+
+function parseAddr(addr) {
+  // "A1" -> {r:0, c:0}, "AB12" -> {r:11, c:27}
+  const m = addr.toUpperCase().match(/^([A-Z]+)(\d+)$/);
+  if (!m) return null;
+  let c = 0;
+  for (let i = 0; i < m[1].length; i++) c = c * 26 + (m[1].charCodeAt(i) - 64);
+  return { r: parseInt(m[2]) - 1, c: c - 1 };
+}
+
+function getRaw(r, c) { return fg.cells[cellKey(r, c)] || ''; }
+function setRaw(r, c, v) {
+  if (v === '') delete fg.cells[cellKey(r, c)];
+  else fg.cells[cellKey(r, c)] = v;
+}
+
+// ---- Formula evaluator ----
+function evalCell(r, c, visited) {
+  const raw = getRaw(r, c);
+  if (!raw.startsWith('=')) return raw;
+  if (!visited) visited = new Set();
+  const key = cellKey(r, c);
+  if (visited.has(key)) return '#CIRC';
+  visited.add(key);
+  try {
+    return evalFormula(raw.slice(1), visited);
+  } catch(e) { return '#ERR'; }
+}
+
+function evalFormula(expr, visited) {
+  expr = expr.trim().toUpperCase();
+
+  // Expand aggregate functions: SUM(A1:B3), AVG(...), etc.
+  expr = expr.replace(/\b(SUM|AVG|COUNT|MIN|MAX|PRODUCT)\(([A-Z]+\d+):([A-Z]+\d+)\)/g, (_, fn, a1, a2) => {
+    const from = parseAddr(a1), to = parseAddr(a2);
+    if (!from || !to) return '0';
+    const vals = [];
+    for (let rr = Math.min(from.r, to.r); rr <= Math.max(from.r, to.r); rr++)
+      for (let cc = Math.min(from.c, to.c); cc <= Math.max(from.c, to.c); cc++) {
+        const v = evalCell(rr, cc, visited);
+        const n = parseFloat(v);
+        if (!isNaN(n)) vals.push(n);
+      }
+    if (fn === 'SUM') return vals.reduce((a,b)=>a+b,0);
+    if (fn === 'AVG') return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+    if (fn === 'COUNT') return vals.length;
+    if (fn === 'MIN') return vals.length ? Math.min(...vals) : 0;
+    if (fn === 'MAX') return vals.length ? Math.max(...vals) : 0;
+    if (fn === 'PRODUCT') return vals.reduce((a,b)=>a*b,1);
+    return 0;
+  });
+
+  // Replace cell references A1, B2, etc.
+  expr = expr.replace(/\b([A-Z]+\d+)\b/g, (addr) => {
+    const pos = parseAddr(addr);
+    if (!pos) return '0';
+    const v = evalCell(pos.r, pos.c, visited);
+    const n = parseFloat(v);
+    return isNaN(n) ? '"' + v + '"' : n;
+  });
+
+  // IF(cond, true, false) - basic support
+  expr = expr.replace(/\bIF\((.+),(.+),(.+)\)/g, (_, cond, t, f) => {
+    try { return Function('"use strict";return (' + cond + ')')() ? t.trim() : f.trim(); }
+    catch { return '#ERR'; }
+  });
+
+  // Safe eval (numbers and operators only after substitution)
+  const result = Function('"use strict";return (' + expr + ')')();
+  if (typeof result === 'number' && !isFinite(result)) return '#DIV/0';
+  return result;
+}
+
+function formatValue(raw, result) {
+  if (result === null || result === undefined || result === '') return { text: '', cls: '' };
+  const s = String(result);
+  const n = parseFloat(s);
+  const isNum = s !== '' && !isNaN(n) && isFinite(n);
+  const isErr = ['#ERR','#CIRC','#DIV/0','#REF'].includes(s);
+  return {
+    text: isNum ? (Number.isInteger(n) ? s : parseFloat(n.toPrecision(10)).toString()) : s,
+    cls: isErr ? 'formula-error' : (raw.startsWith('=') ? 'formula-result' : ''),
+    right: isNum,
+  };
+}
+
+// ---- Rendering ----
+function renderGrid() {
+  const tbl = document.getElementById('sg-table');
+  if (!tbl) return;
+  tbl.innerHTML = '';
+
+  const numCols = GRID_COLS;
+  const numRows = GRID_ROWS;
+
+  // colgroup
+  const cg = document.createElement('colgroup');
+  const rhCol = document.createElement('col'); rhCol.style.width = '40px'; cg.appendChild(rhCol);
+  for (let c = 0; c < numCols; c++) {
+    const col = document.createElement('col');
+    col.style.width = (fg.colWidths[c] || 100) + 'px';
+    col.id = 'sgcol_' + c;
+    cg.appendChild(col);
+  }
+  tbl.appendChild(cg);
+
+  // Header row
+  const thead = document.createElement('thead');
+  const hrow = document.createElement('tr');
+  const corner = document.createElement('th');
+  corner.className = 'sg-corner';
+  corner.addEventListener('click', () => { fg.selRow=0; fg.selCol=0; fg.selRow2=numRows-1; fg.selCol2=numCols-1; updateGridSelection(); });
+  hrow.appendChild(corner);
+  for (let c = 0; c < numCols; c++) {
+    const th = document.createElement('th');
+    th.className = 'sg-col-header';
+    th.id = 'sgth_' + c;
+    const inner = document.createElement('div');
+    inner.className = 'sg-col-header-inner';
+    inner.textContent = colLabel(c);
+    th.appendChild(inner);
+    // Resizer goes directly on th (not inside inner) so overflow:hidden on inner won't clip it
+    const resizer = document.createElement('div');
+    resizer.className = 'sg-col-resize';
+    resizer.addEventListener('mousedown', e => startColResize(e, c, resizer));
+    th.appendChild(resizer);
+    th.addEventListener('click', e => {
+      if (e.target.classList.contains('sg-col-resize')) return;
+      fg.selRow=0; fg.selCol=c; fg.selRow2=numRows-1; fg.selCol2=c;
+      updateGridSelection();
+    });
+    hrow.appendChild(th);
+  }
+  thead.appendChild(hrow);
+  tbl.appendChild(thead);
+
+  // Body
+  const tbody = document.createElement('tbody');
+  for (let r = 0; r < numRows; r++) {
+    const tr = document.createElement('tr');
+    const rh = document.createElement('td');
+    rh.className = 'sg-row-header';
+    rh.id = 'sgrh_' + r;
+    rh.textContent = r + 1;
+    rh.addEventListener('click', () => {
+      fg.selRow=r; fg.selCol=0; fg.selRow2=r; fg.selCol2=numCols-1;
+      updateGridSelection();
+    });
+    tr.appendChild(rh);
+
+    for (let c = 0; c < numCols; c++) {
+      const td = document.createElement('td');
+      td.className = 'sg-cell';
+      td.id = 'sgcell_' + r + '_' + c;
+      td.dataset.r = r; td.dataset.c = c;
+
+      const raw = getRaw(r, c);
+      let result = raw;
+      if (raw.startsWith('=')) {
+        try { result = evalCell(r, c); } catch { result = '#ERR'; }
+      }
+      const fmt = formatValue(raw, result);
+      const disp = document.createElement('div');
+      disp.className = 'sg-cell-display' + (fmt.cls ? ' ' + fmt.cls : '') + (fmt.right ? ' align-right' : '');
+      disp.textContent = fmt.text;
+
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.className = 'sg-cell-input';
+      inp.value = raw;
+
+      td.addEventListener('mousedown', e => {
+        // Don't preventDefault — we need focus to land somewhere
+        closeActiveInput();
+        fg.selRow = r; fg.selCol = c; fg.selRow2 = r; fg.selCol2 = c;
+        updateGridSelection();
+        updateFormulaBar();
+        // Focus the scroll container so keydown works
+        setTimeout(() => document.getElementById('grid-scroll')?.focus(), 0);
+      });
+      td.addEventListener('dblclick', () => openCellInput(r, c, true));
+      inp.addEventListener('keydown', e => handleCellKey(e, r, c));
+      inp.addEventListener('blur', () => commitInput(r, c));
+      inp.addEventListener('input', () => {
+        document.getElementById('grid-formula-bar').value = inp.value;
+      });
+
+      td.appendChild(disp);
+      td.appendChild(inp);
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  tbl.appendChild(tbody);
+  updateGridSelection();
+  updateFormulaBar();
+}
+
+let _activeInputRC = null;
+
+function getCellEl(r, c) { return document.getElementById('sgcell_' + r + '_' + c); }
+
+function openCellInput(r, c, selectAll) {
+  closeActiveInput();
+  const td = getCellEl(r, c);
+  if (!td) return;
+  const disp = td.querySelector('.sg-cell-display');
+  const inp = td.querySelector('.sg-cell-input');
+  inp.value = getRaw(r, c);
+  disp.style.display = 'none';
+  inp.style.display = 'block';
+  _activeInputRC = [r, c];
+  document.getElementById('grid-formula-bar').value = inp.value;
+  requestAnimationFrame(() => {
+    inp.focus();
+    if (selectAll) inp.select();
+    else { const len = inp.value.length; inp.setSelectionRange(len, len); }
+  });
+}
+
+function closeActiveInput() {
+  if (!_activeInputRC) return;
+  const [r, c] = _activeInputRC;
+  commitInput(r, c);
+}
+
+function commitInput(r, c) {
+  if (!_activeInputRC || _activeInputRC[0] !== r || _activeInputRC[1] !== c) return;
+  const td = getCellEl(r, c);
+  if (!td) { _activeInputRC = null; return; }
+  const inp = td.querySelector('.sg-cell-input');
+  const disp = td.querySelector('.sg-cell-display');
+  const val = inp.value;
+  setRaw(r, c, val);
+  inp.style.display = 'none';
+  disp.style.display = 'flex';
+  // Update display
+  let result = val;
+  if (val.startsWith('=')) { try { result = evalCell(r, c); } catch { result = '#ERR'; } }
+  const fmt = formatValue(val, result);
+  disp.className = 'sg-cell-display' + (fmt.cls ? ' ' + fmt.cls : '') + (fmt.right ? ' align-right' : '');
+  disp.textContent = fmt.text;
+  _activeInputRC = null;
+  updateFormulaBar();
+  // Return focus to scroll container so arrow keys work again
+  requestAnimationFrame(() => document.getElementById('grid-scroll')?.focus());
+}
+
+function handleCellKey(e, r, c) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    commitInput(r, c);
+    moveSel(1, 0);
+  } else if (e.key === 'Tab') {
+    e.preventDefault();
+    commitInput(r, c);
+    moveSel(0, e.shiftKey ? -1 : 1);
+  } else if (e.key === 'Escape') {
+    const td = getCellEl(r, c);
+    const inp = td?.querySelector('.sg-cell-input');
+    const disp = td?.querySelector('.sg-cell-display');
+    if (inp) { inp.style.display = 'none'; inp.value = getRaw(r,c); }
+    if (disp) disp.style.display = 'flex';
+    _activeInputRC = null;
+  }
+}
+
+function moveSel(dr, dc) {
+  fg.selRow = Math.max(0, Math.min(GRID_ROWS-1, fg.selRow + dr));
+  fg.selCol = Math.max(0, Math.min(GRID_COLS-1, fg.selCol + dc));
+  fg.selRow2 = fg.selRow; fg.selCol2 = fg.selCol;
+  updateGridSelection();
+  updateFormulaBar();
+  scrollToCell(fg.selRow, fg.selCol);
+}
+
+function updateGridSelection() {
+  // Update cell highlights
+  document.querySelectorAll('.sg-cell.selected,.sg-col-header.selected-col,.sg-row-header.selected-row').forEach(el => {
+    el.classList.remove('selected','selected-col','selected-row');
+  });
+  const r1=Math.min(fg.selRow,fg.selRow2), r2=Math.max(fg.selRow,fg.selRow2);
+  const c1=Math.min(fg.selCol,fg.selCol2), c2=Math.max(fg.selCol,fg.selCol2);
+  for (let r=r1;r<=r2;r++) for (let c=c1;c<=c2;c++) {
+    getCellEl(r,c)?.classList.add('selected');
+  }
+  for (let c=c1;c<=c2;c++) document.getElementById('sgth_'+c)?.classList.add('selected-col');
+  for (let r=r1;r<=r2;r++) document.getElementById('sgrh_'+r)?.classList.add('selected-row');
+  // Cell ref label
+  const ref = r1===r2&&c1===c2 ? cellAddr(fg.selRow,fg.selCol)
+    : cellAddr(r1,c1)+':'+cellAddr(r2,c2);
+  const refEl = document.getElementById('grid-cell-ref');
+  if (refEl) refEl.textContent = ref;
+}
+
+function updateFormulaBar() {
+  const bar = document.getElementById('grid-formula-bar');
+  if (bar) bar.value = getRaw(fg.selRow, fg.selCol);
+}
+
+function scrollToCell(r, c) {
+  const td = getCellEl(r, c);
+  td?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+
+// Keyboard navigation — listen on grid-scroll (focusable) and document (fallback)
+function handleGridKeydown(e) {
+  if (state.currentSheet !== 'grid') return;
+  if (_activeInputRC) return; // input is open, let it handle its own keys
+
+  const moves = { ArrowUp:[-1,0], ArrowDown:[1,0], ArrowLeft:[0,-1], ArrowRight:[0,1] };
+  if (moves[e.key]) {
+    e.preventDefault();
+    moveSel(...moves[e.key]);
+    return;
+  }
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    e.preventDefault();
+    const r1=Math.min(fg.selRow,fg.selRow2), r2=Math.max(fg.selRow,fg.selRow2);
+    const c1=Math.min(fg.selCol,fg.selCol2), c2=Math.max(fg.selCol,fg.selCol2);
+    for (let r=r1;r<=r2;r++) for (let c=c1;c<=c2;c++) {
+      setRaw(r,c,'');
+      const disp = getCellEl(r,c)?.querySelector('.sg-cell-display');
+      if (disp) { disp.textContent=''; disp.className='sg-cell-display'; }
+    }
+    return;
+  }
+  // F2 or printable char → open cell for editing
+  if (e.key === 'F2' || (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey)) {
+    if (e.key === 'F2') {
+      // F2: edit existing value, cursor at end, select all
+      openCellInput(fg.selRow, fg.selCol, true);
+    } else {
+      // Typing: open with empty value, place typed char, no select
+      openCellInput(fg.selRow, fg.selCol, false);
+      requestAnimationFrame(() => {
+        const inp = getCellEl(fg.selRow, fg.selCol)?.querySelector('.sg-cell-input');
+        if (inp) {
+          inp.value = e.key;
+          inp.setSelectionRange(1, 1);
+          document.getElementById('grid-formula-bar').value = e.key;
+        }
+      });
+    }
+    return;
+  }
+}
+
+document.getElementById('grid-scroll').addEventListener('keydown', handleGridKeydown);
+
+// Column resize
+let _resizingCol=null, _resizeX=0, _resizeW=0;
+function startColResize(e, c, resizerEl) {
+  e.preventDefault(); e.stopPropagation();
+  _resizingCol = c;
+  _resizeX = e.clientX;
+  _resizeW = fg.colWidths[c] || 100;
+  if (resizerEl) resizerEl.classList.add('active');
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+  function onMove(e) {
+    const w = Math.max(30, _resizeW + (e.clientX - _resizeX));
+    fg.colWidths[c] = w;
+    // Update colgroup col width
+    const colEl = document.getElementById('sgcol_' + c);
+    if (colEl) colEl.style.width = w + 'px';
+    // Also update the th min-width so sticky headers don't collapse
+    const thEl = document.getElementById('sgth_' + c);
+    if (thEl) thEl.style.minWidth = w + 'px';
+  }
+  function onUp() {
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    if (resizerEl) resizerEl.classList.remove('active');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    _resizingCol = null;
+  }
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+}
+
+// Formula bar
+document.getElementById('grid-formula-bar').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    setRaw(fg.selRow, fg.selCol, e.target.value);
+    const td = getCellEl(fg.selRow, fg.selCol);
+    const raw = e.target.value;
+    let result = raw;
+    if (raw.startsWith('=')) { try { result = evalCell(fg.selRow, fg.selCol); } catch { result='#ERR'; } }
+    const fmt = formatValue(raw, result);
+    const disp = td?.querySelector('.sg-cell-display');
+    if (disp) {
+      disp.className = 'sg-cell-display' + (fmt.cls ? ' '+fmt.cls : '') + (fmt.right ? ' align-right' : '');
+      disp.textContent = fmt.text;
+    }
+    moveSel(1, 0);
+  }
+  if (e.key === 'Escape') { e.target.value = getRaw(fg.selRow, fg.selCol); }
+});
+document.getElementById('grid-formula-bar').addEventListener('focus', () => {
+  if (!_activeInputRC) {
+    const td = getCellEl(fg.selRow, fg.selCol);
+    const inp = td?.querySelector('.sg-cell-input');
+    if (inp) {
+      inp.value = getRaw(fg.selRow, fg.selCol);
+    }
+  }
+});
+
+// Add/remove rows & cols
+document.getElementById('gb-add-row').addEventListener('click', () => {
+  // Just extend visible grid (GRID_ROWS is virtual; cells already support any index)
+  notify('Rows are infinite — scroll down or press Enter to reach new rows');
+});
+document.getElementById('gb-add-col').addEventListener('click', () => {
+  notify('Columns are infinite — use cols A-Z');
+});
+document.getElementById('gb-del-row').addEventListener('click', () => {
+  const r = fg.selRow;
+  // Shift all cells in column up
+  for (let rr = r; rr < GRID_ROWS - 1; rr++)
+    for (let c = 0; c < GRID_COLS; c++) {
+      const below = getRaw(rr+1, c);
+      if (below) setRaw(rr, c, below); else delete fg.cells[cellKey(rr,c)];
+    }
+  for (let c=0;c<GRID_COLS;c++) delete fg.cells[cellKey(GRID_ROWS-1,c)];
+  renderGrid();
+});
+document.getElementById('gb-del-col').addEventListener('click', () => {
+  const col = fg.selCol;
+  for (let c = col; c < GRID_COLS - 1; c++)
+    for (let r = 0; r < GRID_ROWS; r++) {
+      const right = getRaw(r, c+1);
+      if (right) setRaw(r, c, right); else delete fg.cells[cellKey(r,c)];
+    }
+  for (let r=0;r<GRID_ROWS;r++) delete fg.cells[cellKey(r,GRID_COLS-1)];
+  renderGrid();
+});
+
+// Tab switch initializes grid
+function initGridIfNeeded() {
+  renderGrid();
+  const scroll = document.getElementById('grid-scroll');
+  scroll.setAttribute('tabindex', '0');
+  // Auto-focus grid-scroll when entering the tab
+  setTimeout(() => scroll.focus(), 50);
+}
+
+// ===================== QUERY BUILDER =====================
+const QB = {
+  op: 'SELECT',
+  tableId: null,
+  history: [],
+};
+
+const QB_OPS = ['=','!=','<','>','<=','>=','LIKE','IS NULL','IS NOT NULL'];
+
+function qbEsc(s) { return String(s).replace(/'/g, "''"); }
+function qbQuoteId(s) { return '`' + s + '`'; }
+
+function qbTableOptions() {
+  const sel = document.getElementById('qb-table-select');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— choose table —</option>';
+  Object.values(state.tables).forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id; opt.textContent = t.name;
+    if (t.id === prev) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function qbGetTable() { return state.tables[QB.tableId] || null; }
+
+// Returns array of {table, field} for all currently active tables (main + joined)
+// Returns main table alias (or table name if none set)
+function qbMainAlias() {
+  const t = qbGetTable(); if (!t) return '';
+  const a = (document.getElementById('qb-table-alias')?.value || '').trim();
+  return a || t.name;
+}
+
+// Returns array of {table, field, alias} for all active tables (main + joined)
+// alias = the SQL alias used to reference that table in the query
+function qbActiveTableFields() {
+  const t = qbGetTable(); if (!t) return [];
+  const entries = [];
+  const mainAlias = qbMainAlias();
+  t.fields.forEach(f => entries.push({ table: t, field: f, alias: mainAlias }));
+  document.querySelectorAll('#qb-join-list .qb-join-row').forEach(row => {
+    const sel = row.querySelector('[data-role="join-table"]');
+    const aliasInp = row.querySelector('[data-role="join-alias"]');
+    const jt = state.tables[sel?.value];
+    if (!jt) return;
+    const jAlias = (aliasInp?.value || '').trim() || jt.name;
+    jt.fields.forEach(f => entries.push({ table: jt, field: f, alias: jAlias }));
+  });
+  return entries;
+}
+
+function qbRebuildColumns() {
+  const t = qbGetTable(); if (!t) return;
+  const allEntries = qbActiveTableFields();
+
+  const list = document.getElementById('qb-col-list');
+  const prevChecked = new Set();
+  list.querySelectorAll('.qb-col-field:checked').forEach(cb => prevChecked.add(cb.dataset.qualname));
+  const wasEmpty = list.querySelectorAll('.qb-col-field').length === 0;
+  list.innerHTML = '';
+
+  // "* all" checkbox
+  const allWrap = document.createElement('label'); allWrap.className = 'qb-col-check';
+  const allCb = document.createElement('input'); allCb.type='checkbox'; allCb.id='qb-col-all';
+  allCb.checked = wasEmpty || document.getElementById('qb-col-all')?.checked !== false;
+  allCb.addEventListener('change', () => {
+    list.querySelectorAll('.qb-col-field').forEach(cb => cb.checked = allCb.checked);
+  });
+  allWrap.append(allCb, '* (all columns)');
+  list.appendChild(allWrap);
+
+  // Group by alias — same table joined twice with different aliases gets two groups
+  const byAlias = {};
+  allEntries.forEach(({ table, field, alias }) => {
+    const key = alias + '|' + table.id;
+    if (!byAlias[key]) byAlias[key] = { table, alias, fields: [] };
+    byAlias[key].fields.push(field);
+  });
+
+  Object.values(byAlias).forEach(({ table: tbl, alias, fields }) => {
+    const grp = document.createElement('div');
+    grp.style.cssText = 'font-size:9px;font-weight:700;color:var(--accent3);padding:6px 0 2px;text-transform:uppercase;letter-spacing:.06em';
+    grp.textContent = alias !== tbl.name ? alias + ' (' + tbl.name + ')' : tbl.name;
+    list.appendChild(grp);
+
+    fields.forEach(f => {
+      const qualname = alias + '.' + f.name;   // alias.col — key for checked state
+      const colexpr  = alias + '.' + f.name;   // goes into SELECT clause
+      const wrap = document.createElement('label'); wrap.className = 'qb-col-check';
+      const cb = document.createElement('input'); cb.type='checkbox'; cb.className='qb-col-field';
+      cb.dataset.qualname = qualname;
+      cb.dataset.colexpr  = colexpr;
+      // also store field alias info for AS clause
+      cb.dataset.alias = alias;
+      cb.dataset.fname = f.name;
+      cb.checked = wasEmpty || prevChecked.size === 0 || prevChecked.has(qualname);
+      const badge = f.pk ? ' 🔑' : '';
+      wrap.append(cb, f.name + badge + '  ');
+      const type = document.createElement('span');
+      type.style.cssText = 'font-size:9px;color:var(--text3);margin-left:auto';
+      type.textContent = f.type;
+      wrap.appendChild(type);
+      // Column alias input
+      const aliasInp = document.createElement('input');
+      aliasInp.className = 'qb-join-alias';
+      aliasInp.placeholder = 'col alias';
+      aliasInp.title = 'Column alias (AS …)';
+      aliasInp.style.cssText = 'width:62px;margin-left:4px;flex-shrink:0';
+      aliasInp.dataset.role = 'col-alias';
+      aliasInp.addEventListener('input', () => { cb.dataset.colAlias = aliasInp.value.trim(); });
+      wrap.appendChild(aliasInp);
+      list.appendChild(wrap);
+    });
+  });
+
+  const allFields = list.querySelectorAll('.qb-col-field');
+  allCb.checked = [...allFields].every(cb => cb.checked);
+
+  // ORDER BY options — use alias.col
+  const orderSel = document.getElementById('qb-order-col');
+  const prevOrder = orderSel.value;
+  orderSel.innerHTML = '<option value="">—</option>';
+  allEntries.forEach(({ field: f, alias }) => {
+    const qual = alias + '.' + f.name;
+    const o = document.createElement('option'); o.value=qual; o.textContent=qual;
+    orderSel.appendChild(o);
+  });
+  if (prevOrder) orderSel.value = prevOrder;
+
+  qbRefreshWhereColSelects();
+}
+
+function qbRefreshWhereColSelects() {
+  const allEntries = qbActiveTableFields();
+  document.querySelectorAll('#qb-where-list .qb-where-col').forEach(sel => {
+    const prev = sel.value;
+    sel.innerHTML = '';
+    allEntries.forEach(({ field: f, alias }) => {
+      const qual = alias + '.' + f.name;
+      const o = document.createElement('option'); o.value=qual; o.textContent=qual;
+      sel.appendChild(o);
+    });
+    if (prev) sel.value = prev;
+  });
+}
+
+function qbMakeJoinRow() {
+  const t = qbGetTable(); if (!t) return;
+  const cont = document.getElementById('qb-join-list');
+  const row = document.createElement('div'); row.className = 'qb-join-row';
+
+  // Row 1: type + table + alias + delete
+  const top = document.createElement('div'); top.className = 'qb-join-row-top';
+
+  const typeSel = document.createElement('select'); typeSel.className = 'qb-join-type';
+  ['INNER JOIN','LEFT JOIN','RIGHT JOIN','FULL JOIN'].forEach(jt => {
+    const o = document.createElement('option'); o.value=jt; o.textContent=jt; typeSel.appendChild(o);
+  });
+
+  const tableSel = document.createElement('select'); tableSel.className = 'qb-select'; tableSel.style.flex='1';
+  tableSel.dataset.role = 'join-table';
+  // Allow joining any table (including same table as main — self-join via alias)
+  Object.values(state.tables).forEach(tbl => {
+    const o = document.createElement('option'); o.value=tbl.id; o.textContent=tbl.name; tableSel.appendChild(o);
+  });
+
+  const aliasInp = document.createElement('input');
+  aliasInp.className = 'qb-join-alias';
+  aliasInp.placeholder = 'alias';
+  aliasInp.title = 'Table alias — required when joining the same table twice';
+  aliasInp.dataset.role = 'join-alias';
+  aliasInp.addEventListener('input', () => {
+    // Update right-side ON options to use new alias, then rebuild col list
+    rebuildRightOptions();
+    qbRebuildColumns();
+  });
+
+  const delBtn = document.createElement('button'); delBtn.className='qb-join-del'; delBtn.textContent='✕';
+  delBtn.addEventListener('click', () => { row.remove(); qbRebuildColumns(); });
+
+  top.append(typeSel, tableSel, aliasInp, delBtn);
+
+  // Row 2: ON clause
+  const onRow = document.createElement('div'); onRow.className = 'qb-join-on';
+  const onLabel = document.createElement('span'); onLabel.textContent='ON';
+
+  const leftSel  = document.createElement('select'); leftSel.dataset.role='join-left';
+  const eqLabel  = document.createElement('span');   eqLabel.textContent='=';
+  eqLabel.style.cssText = 'color:var(--accent3);font-weight:700;padding:0 2px;flex-shrink:0';
+  const rightSel = document.createElement('select'); rightSel.dataset.role='join-right';
+
+  function getCurrentAlias() {
+    return aliasInp.value.trim() || state.tables[tableSel.value]?.name || '';
+  }
+
+  function rebuildLeftOptions() {
+    const prev = leftSel.value;
+    leftSel.innerHTML = '';
+    qbActiveTableFields().forEach(({ field: f, alias }) => {
+      // exclude the current join's right-side alias from left options (will be in rightSel)
+      const qual = alias + '.' + f.name;
+      const o = document.createElement('option'); o.value=qual; o.textContent=qual; leftSel.appendChild(o);
+    });
+    if (prev) leftSel.value = prev;
+  }
+
+  function rebuildRightOptions() {
+    const prev = rightSel.value;
+    const jt = state.tables[tableSel.value];
+    const ja = getCurrentAlias();
+    rightSel.innerHTML = '';
+    if (!jt) return;
+    jt.fields.forEach(f => {
+      const qual = ja + '.' + f.name;
+      const o = document.createElement('option'); o.value=qual; o.textContent=qual; rightSel.appendChild(o);
+    });
+    // Auto-detect FK
+    const rel = state.relations.find(r =>
+      (r.fromTable===QB.tableId && r.toTable===jt.id) ||
+      (r.fromTable===jt.id && r.toTable===QB.tableId)
+    );
+    if (rel && state.tables[rel.fromTable] && state.tables[rel.toTable]) {
+      const mainAlias = qbMainAlias();
+      const lt = rel.fromTable===QB.tableId ? t : state.tables[rel.fromTable];
+      const rt = rel.fromTable===jt.id ? t : jt;
+      const lf = lt?.fields.find(f=>f.id===rel.fromField);
+      const rf = rt?.fields.find(f=>f.id===rel.toField);
+      if (lf) { const v=mainAlias+'.'+lf.name; if ([...leftSel.options].some(o=>o.value===v)) leftSel.value=v; }
+      if (rf) { const v=ja+'.'+rf.name; if ([...rightSel.options].some(o=>o.value===v)) rightSel.value=v; }
+    } else if (prev) {
+      rightSel.value = prev;
+    }
+  }
+
+  tableSel.addEventListener('change', () => {
+    // Auto-suggest alias if same table already joined
+    const jt = state.tables[tableSel.value];
+    if (jt) {
+      const existing = [...document.querySelectorAll('#qb-join-list [data-role="join-table"]')]
+        .filter(s => s !== tableSel && s.value === tableSel.value);
+      if (existing.length > 0 || tableSel.value === QB.tableId) {
+        const suffix = existing.length + 2;
+        if (!aliasInp.value.trim()) aliasInp.value = jt.name.slice(0,2) + suffix;
+      }
+    }
+    rebuildRightOptions();
+    qbRebuildColumns();
+  });
+
+  rebuildLeftOptions();
+  rebuildRightOptions();
+  onRow.append(onLabel, leftSel, eqLabel, rightSel);
+  row.append(top, onRow);
+  cont.appendChild(row);
+  qbRebuildColumns();
+}
+
+function qbRebuildInsertFields() {
+  const t = qbGetTable(); if (!t) return;
+  const cont = document.getElementById('qb-insert-fields');
+  cont.innerHTML = '';
+  t.fields.forEach(f => {
+    const row = document.createElement('div'); row.className = 'qb-field-row';
+    const lbl = document.createElement('span'); lbl.className = 'qb-field-label'; lbl.textContent = f.name;
+    const inp = document.createElement('input'); inp.className = 'qb-field-input';
+    inp.placeholder = f.pk ? 'auto / value' : 'value';
+    inp.dataset.fid = f.id; inp.dataset.fname = f.name; inp.dataset.ftype = f.type;
+    row.append(lbl, inp);
+    cont.appendChild(row);
+  });
+}
+
+function qbRebuildUpdateFields() {
+  const t = qbGetTable(); if (!t) return;
+  const cont = document.getElementById('qb-update-fields');
+  cont.innerHTML = '';
+  t.fields.forEach(f => {
+    const row = document.createElement('div'); row.className = 'qb-field-row';
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.className='qb-update-cb';
+    cb.dataset.fid=f.id; cb.dataset.fname=f.name; cb.dataset.ftype=f.type;
+    const lbl = document.createElement('span'); lbl.className='qb-field-label'; lbl.textContent=f.name;
+    const inp = document.createElement('input'); inp.className='qb-field-input';
+    inp.placeholder='new value'; inp.dataset.fid=f.id;
+    row.append(cb, lbl, inp);
+    cont.appendChild(row);
+  });
+}
+
+function qbMakeWhereRow(containerId) {
+  const t = qbGetTable(); if (!t) return;
+  const cont = document.getElementById(containerId);
+  const row = document.createElement('div'); row.className = 'qb-where-row';
+
+  const colSel = document.createElement('select'); colSel.className = 'qb-where-col';
+  const isSelectWhere = containerId === 'qb-where-list';
+  const entries = isSelectWhere ? qbActiveTableFields() : t.fields.map(f => ({ table: t, field: f }));
+  entries.forEach(({ table: tbl, field: f }) => {
+    const qual = isSelectWhere && document.querySelectorAll('#qb-join-list .qb-join-row').length > 0
+      ? tbl.name + '.' + f.name : f.name;
+    const o = document.createElement('option'); o.value=qual; o.textContent=qual; colSel.appendChild(o);
+  });
+
+  const opSel = document.createElement('select'); opSel.className = 'qb-where-op';
+  QB_OPS.forEach(op => { const o=document.createElement('option'); o.value=op; o.textContent=op; opSel.appendChild(o); });
+
+  const valInp = document.createElement('input');
+  valInp.className = 'qb-where-val'; valInp.placeholder = 'value';
+
+  // hide value input for NULL ops
+  opSel.addEventListener('change', () => {
+    valInp.style.display = opSel.value.includes('NULL') ? 'none' : '';
+  });
+
+  const delBtn = document.createElement('button'); delBtn.className='qb-where-del'; delBtn.textContent='✕';
+  delBtn.addEventListener('click', () => row.remove());
+
+  row.append(colSel, opSel, valInp, delBtn);
+  cont.appendChild(row);
+}
+
+function qbCollectWhere(containerId) {
+  const rows = document.querySelectorAll('#' + containerId + ' .qb-where-row');
+  const parts = [];
+  rows.forEach(row => {
+    const col = row.querySelector('.qb-where-col')?.value;
+    const op  = row.querySelector('.qb-where-op')?.value;
+    const val = row.querySelector('.qb-where-val')?.value;
+    if (!col || !op) return;
+    if (op === 'IS NULL' || op === 'IS NOT NULL') {
+      parts.push(`${qbQuoteId(col)} ${op}`);
+    } else if (val !== '') {
+      const isNum = !isNaN(Number(val)) && val !== '';
+      parts.push(`${qbQuoteId(col)} ${op} ${isNum ? val : "'" + qbEsc(val) + "'"}`);
+    }
+  });
+  return parts.length ? 'WHERE ' + parts.join('\n  AND ') : '';
+}
+
+function qbFormatVal(val, ftype) {
+  if (val === '' || val === null || val === undefined) return 'NULL';
+  const numTypes = ['INTEGER','REAL','BOOLEAN','NUMERIC'];
+  if (numTypes.includes(ftype?.toUpperCase()) && !isNaN(Number(val))) return val;
+  return "'" + qbEsc(val) + "'";
+}
+
+function syntaxHL(sql) {
+  const kw = ['SELECT','INSERT','UPDATE','DELETE','FROM','INTO','SET','WHERE',
+    'AND','OR','NOT','VALUES','HAVING','LIMIT','OFFSET','JOIN','LEFT','RIGHT',
+    'INNER','OUTER','ON','AS','DISTINCT','COUNT','SUM','AVG','MIN','MAX',
+    'ASC','DESC','IS','NULL','LIKE','IN','BETWEEN','ORDER BY','GROUP BY'];
+  let out = sql.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  out = out.replace(/`([^`]+)`/g, '<span class="qb-col">`$1`</span>');
+  out = out.replace(/'[^']*'/g, s => '<span class="qb-val">' + s + '</span>');
+  out = out.replace(/--[^\n]*/g, s => '<span class="qb-cmt">' + s + '</span>');
+  kw.forEach(k => {
+    const re = new RegExp('\\b' + k + '\\b', 'gi');
+    out = out.replace(re, s => '<span class="qb-kw">' + s + '</span>');
+  });
+  return out;
+}
+
+function qbBuild() {
+  const t = qbGetTable();
+  if (!t) { qbSetOutput('-- Please select a table first'); return; }
+  let sql = '';
+
+  if (QB.op === 'SELECT') {
+    const checked = [...document.querySelectorAll('#qb-col-list .qb-col-field:checked')];
+    const allCb   = document.getElementById('qb-col-all');
+    const allEntries = qbActiveTableFields();
+    const hasJoins   = document.querySelectorAll('#qb-join-list .qb-join-row').length > 0;
+    const mainAlias  = qbMainAlias();
+
+    let cols;
+    if (allCb?.checked || checked.length === 0 || checked.length === allEntries.length) {
+      cols = '*';
+    } else {
+      cols = checked.map(cb => {
+        const expr = cb.dataset.colexpr || '';   // "alias.field"
+        if (!expr) return '*';
+        const [al, cn] = expr.split('.');
+        // Build "alias.col" or plain "col" depending on whether joins exist
+        let colSql = hasJoins ? qbQuoteId(al) + '.' + qbQuoteId(cn) : qbQuoteId(cn);
+        // Append column alias if set
+        const colAlias = (cb.dataset.colAlias || '').trim();
+        if (colAlias) colSql += ' AS ' + qbQuoteId(colAlias);
+        return colSql;
+      }).join(', ');
+    }
+
+    // Collect JOINs — emit AS alias when alias differs from table name
+    const joinRows = [...document.querySelectorAll('#qb-join-list .qb-join-row')];
+    const joinClauses = joinRows.map(row => {
+      const jType    = row.querySelector('.qb-join-type')?.value || 'INNER JOIN';
+      const jTblId   = row.querySelector('[data-role="join-table"]')?.value;
+      const jAliasV  = (row.querySelector('[data-role="join-alias"]')?.value || '').trim();
+      const jTbl     = state.tables[jTblId];
+      const leftV    = row.querySelector('[data-role="join-left"]')?.value;   // "alias.col"
+      const rightV   = row.querySelector('[data-role="join-right"]')?.value;  // "alias.col"
+      if (!jTbl || !leftV || !rightV) return null;
+      const jAlias   = jAliasV || jTbl.name;
+      const [la, lc] = leftV.split('.');
+      const [ra, rc] = rightV.split('.');
+      const tblPart  = jAliasV
+        ? qbQuoteId(jTbl.name) + ' AS ' + qbQuoteId(jAlias)
+        : qbQuoteId(jTbl.name);
+      return jType + ' ' + tblPart
+        + ' ON ' + qbQuoteId(la) + '.' + qbQuoteId(lc)
+        + ' = '  + qbQuoteId(ra) + '.' + qbQuoteId(rc);
+    }).filter(Boolean);
+
+    // Subquery
+    const subquery = (document.getElementById('qb-subquery')?.value || '').trim();
+    const subAlias = (document.getElementById('qb-subquery-alias')?.value || 'sub').trim() || 'sub';
+
+    const where    = qbCollectWhere('qb-where-list');
+    const orderCol = document.getElementById('qb-order-col')?.value;
+    const orderDir = document.getElementById('qb-order-dir')?.value || 'ASC';
+    const limit    = document.getElementById('qb-limit')?.value;
+
+    // Build FROM clause — include table alias if set
+    let fromClause;
+    if (subquery) {
+      fromClause = '(\n  ' + subquery.replace(/\n/g, '\n  ') + '\n) AS ' + qbQuoteId(subAlias);
+      cols = '*';
+    } else {
+      const mainAliasV = (document.getElementById('qb-table-alias')?.value || '').trim();
+      fromClause = mainAliasV
+        ? qbQuoteId(t.name) + ' AS ' + qbQuoteId(mainAliasV)
+        : qbQuoteId(t.name);
+    }
+
+    sql = 'SELECT ' + cols + '\nFROM ' + fromClause;
+    joinClauses.forEach(j => { sql += '\n' + j; });
+    if (where) sql += '\n' + where;
+    if (orderCol) {
+      const [oa, oc] = orderCol.split('.');
+      const orderExpr = oc ? qbQuoteId(oa) + '.' + qbQuoteId(oc) : qbQuoteId(oa);
+      sql += '\nORDER BY ' + orderExpr + ' ' + orderDir;
+    }
+    if (limit) sql += '\nLIMIT ' + parseInt(limit);
+    sql += ';';
+
+  } else if (QB.op === 'INSERT') {
+    const inputs = [...document.querySelectorAll('#qb-insert-fields .qb-field-input')];
+    const filled = inputs.filter(i => i.value !== '');
+    if (!filled.length) { qbSetOutput('-- Fill in at least one field value'); return; }
+    const cols = filled.map(i => qbQuoteId(i.dataset.fname)).join(', ');
+    const vals = filled.map(i => qbFormatVal(i.value, i.dataset.ftype)).join(', ');
+    sql = 'INSERT INTO ' + qbQuoteId(t.name) + '\n  (' + cols + ')\nVALUES\n  (' + vals + ');';
+
+  } else if (QB.op === 'UPDATE') {
+    const cbs = [...document.querySelectorAll('#qb-update-fields .qb-update-cb:checked')];
+    if (!cbs.length) { qbSetOutput('-- Check at least one field to update'); return; }
+    const sets = cbs.map(cb => {
+      const inp = cb.parentElement.querySelector('.qb-field-input');
+      return '  ' + qbQuoteId(cb.dataset.fname) + ' = ' + qbFormatVal(inp?.value, cb.dataset.ftype);
+    }).join(',\n');
+    const where = qbCollectWhere('qb-update-where-list');
+    sql = 'UPDATE ' + qbQuoteId(t.name) + '\nSET\n' + sets;
+    if (where) sql += '\n' + where;
+    else sql += '\n-- ⚠ No WHERE clause: all rows will be updated';
+    sql += ';';
+
+  } else if (QB.op === 'DELETE') {
+    const where = qbCollectWhere('qb-delete-where-list');
+    sql = 'DELETE FROM ' + qbQuoteId(t.name);
+    if (where) sql += '\n' + where;
+    else sql += '\n-- ⚠ No WHERE clause: ALL rows will be deleted';
+    sql += ';';
+  }
+
+  qbSetOutput(sql);
+  qbAddHistory(sql);
+}
+
+function qbSetOutput(sql) {
+  const el = document.getElementById('qb-output');
+  el.value = sql;
+}
+
+function qbAddHistory(sql) {
+  QB.history.unshift(sql);
+  if (QB.history.length > 30) QB.history.pop();
+  qbRenderHistory();
+}
+
+function qbRenderHistory() {
+  const cont = document.getElementById('qb-history');
+  if (!QB.history.length) {
+    cont.innerHTML = '<div class="qb-history-empty">No queries yet</div>'; return;
+  }
+  cont.innerHTML = '';
+  QB.history.forEach(sql => {
+    const item = document.createElement('div'); item.className = 'qb-history-item';
+    item.textContent = sql.replace(/\s+/g,' ').trim().slice(0, 120);
+    item.title = sql;
+    item.addEventListener('click', () => qbSetOutput(sql));
+    cont.appendChild(item);
+  });
+}
+
+function qbOnTableChange() {
+  QB.tableId = document.getElementById('qb-table-select').value || null;
+  if (!QB.tableId) return;
+  qbRebuildColumns();
+  qbRebuildInsertFields();
+  qbRebuildUpdateFields();
+  // Clear where rows and join list and subquery
+  ['qb-where-list','qb-update-where-list','qb-delete-where-list','qb-join-list'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.innerHTML = '';
+  });
+  const sqEl = document.getElementById('qb-subquery'); if (sqEl) sqEl.value = '';
+  const sqAlias = document.getElementById('qb-subquery-alias'); if (sqAlias) sqAlias.value = '';
+}
+
+function qbOnOpChange(op) {
+  QB.op = op;
+  document.querySelectorAll('.qb-op').forEach(b => b.classList.toggle('active', b.dataset.op === op));
+  ['SELECT','INSERT','UPDATE','DELETE'].forEach(o => {
+    const p = document.getElementById('qb-panel-' + o);
+    if (p) p.style.display = o === op ? '' : 'none';
+  });
+}
+
+function initQueryBuilder() {
+  qbTableOptions();
+  qbRenderHistory();
+}
+
+// ===================== SQL EXECUTION ENGINE =====================
+function qbExecute() {
+  const el = document.getElementById('qb-output');
+  const sql = (el.value || '').trim();
+  if (!sql || sql.startsWith('--')) {
+    qbShowExecMsg('Build a query first, then click Execute.', 'warning');
+    return;
+  }
+
+  try {
+    const upper = sql.replace(/\s+/g, ' ').toUpperCase();
+    if (upper.startsWith('SELECT')) {
+      qbExecSelect(sql);
+    } else if (upper.startsWith('INSERT')) {
+      qbExecInsert(sql);
+    } else if (upper.startsWith('UPDATE')) {
+      qbExecUpdate(sql);
+    } else if (upper.startsWith('DELETE')) {
+      qbExecDelete(sql);
+    } else {
+      qbShowExecMsg('Unsupported SQL statement.', 'error');
+    }
+  } catch(e) {
+    qbShowExecMsg('Execution error: ' + e.message, 'error');
+  }
+}
+
+// --- Helpers ---
+function qbResolveTable(name) {
+  name = name.replace(/`/g,'').trim();
+  return Object.values(state.tables).find(t => t.name.toLowerCase() === name.toLowerCase()) || null;
+}
+
+function qbGetRecords(tableId) {
+  return state.dataRecords[tableId] || [];
+}
+
+function qbFieldByName(table, name) {
+  name = name.replace(/`/g,'').trim();
+  return table.fields.find(f => f.name.toLowerCase() === name.toLowerCase()) || null;
+}
+
+function qbCoerce(val) {
+  if (val === null || val === undefined || val === '') return null;
+  const n = Number(val);
+  return isNaN(n) ? String(val) : n;
+}
+
+// Parse WHERE clause into condition objects
+// Supports: col OP val, col IS NULL, col IS NOT NULL, AND chains
+function qbParseWhere(whereStr) {
+  if (!whereStr) return null;
+  whereStr = whereStr.replace(/^WHERE\s+/i, '').trim();
+  const parts = whereStr.split(/\s+AND\s+/i);
+  return parts.map(part => {
+    part = part.trim();
+    // IS NULL / IS NOT NULL
+    let m = part.match(/^`?([\w]+)`?\s+(IS\s+NOT\s+NULL|IS\s+NULL)$/i);
+    if (m) return { col: m[1], op: m[2].toUpperCase().replace(/\s+/g,' '), val: null };
+    // Standard ops
+    m = part.match(/^`?([\w]+)`?\s*(=|!=|<>|<=|>=|<|>|LIKE)\s*(.+)$/i);
+    if (m) {
+      let val = m[3].trim();
+      if (val.startsWith("'") && val.endsWith("'")) val = val.slice(1,-1).replace(/''/g,"'");
+      else val = isNaN(Number(val)) ? val : Number(val);
+      return { col: m[1], op: m[2].toUpperCase(), val };
+    }
+    return null;
+  }).filter(Boolean);
+}
+
+function qbMatchWhere(record, table, conditions) {
+  if (!conditions || !conditions.length) return true;
+  return conditions.every(cond => {
+    const f = qbFieldByName(table, cond.col);
+    if (!f) return true;
+    const raw = record[f.id];
+    const rv = qbCoerce(raw);
+    const cv = qbCoerce(cond.val);
+    switch (cond.op) {
+      case '=':           return rv == cv;
+      case '!=': case '<>': return rv != cv;
+      case '<':           return rv < cv;
+      case '>':           return rv > cv;
+      case '<=':          return rv <= cv;
+      case '>=':          return rv >= cv;
+      case 'LIKE': {
+        const pat = String(cond.val).replace(/%/g,'.*').replace(/_/g,'.');
+        return new RegExp('^' + pat + '$', 'i').test(String(raw || ''));
+      }
+      case 'IS NULL':     return raw === null || raw === undefined || raw === '';
+      case 'IS NOT NULL': return raw !== null && raw !== undefined && raw !== '';
+      default: return true;
+    }
+  });
+}
+
+// Parse the FROM/WHERE/ORDER BY/LIMIT from a SELECT
+// Normalised row: flat object keyed by "table.col" and plain "col"
+function qbNormaliseRow(tableObj, record) {
+  const flat = {};
+  tableObj.fields.forEach(f => {
+    flat[f.name] = record[f.id];
+    flat[tableObj.name + '.' + f.name] = record[f.id];
+  });
+  return flat;
+}
+
+// Strip backticks from a string
+function qbStrip(s) { return s.replace(/`/g, '').trim(); }
+
+// Lookup value in a flat row by qualified or plain key
+function qbGetVal(row, key) {
+  key = qbStrip(key);
+  if (row[key] !== undefined) return row[key];
+  // try plain col name (after last dot)
+  const plain = key.includes('.') ? key.split('.').pop() : null;
+  if (plain && row[plain] !== undefined) return row[plain];
+  return undefined;
+}
+
+// Merge two flat rows, keeping qualified keys collision-safe
+// e.g. if both have "id", keep "users.id" and "posts.id", let "id" be from left
+function qbMergeRows(left, right) {
+  // Start with all left keys
+  const merged = Object.assign({}, left);
+  // Add all right keys; qualified keys always win, plain keys only if not already set
+  Object.keys(right).forEach(k => {
+    if (k.includes('.')) {
+      merged[k] = right[k]; // always keep qualified
+    } else if (!(k in merged)) {
+      merged[k] = right[k]; // plain: don't overwrite left
+    }
+  });
+  return merged;
+}
+
+// Execute a SELECT against in-memory data, returns { colNames, rows }
+// Full alias support: FROM table AS a, JOIN table AS b ON a.col = b.col, col AS alias
+function qbRunSelect(sql) {
+  const s = sql.replace(/;$/, '').trim();
+
+  // aliasMap: alias -> real table object
+  const aliasMap = {};
+
+  // Normalise a row keyed by alias.col (and plain col as fallback)
+  function normaliseWithAlias(tableObj, record, alias) {
+    const flat = {};
+    tableObj.fields.forEach(f => {
+      flat[alias + '.' + f.name] = record[f.id];
+    });
+    // plain col keys (first alias wins)
+    tableObj.fields.forEach(f => {
+      if (!(f.name in flat)) flat[f.name] = record[f.id];
+    });
+    return flat;
+  }
+
+  // -- detect subquery in FROM: FROM ( ... ) AS alias --
+  const subqM = s.match(/FROM\s*\(([\s\S]+?)\)\s*(?:AS\s+`?(\w+)`?)?(?:\s+(?:INNER|LEFT|RIGHT|FULL|JOIN|WHERE|ORDER|LIMIT|$))/i);
+  let baseRows;
+  let baseColNames;
+
+  if (subqM) {
+    const inner = qbRunSelect(subqM[1].trim());
+    baseRows = inner.rows.map(rowArr => {
+      const obj = {};
+      inner.colNames.forEach((c, i) => { obj[c] = rowArr[i]; });
+      return obj;
+    });
+    baseColNames = [...inner.colNames];
+  } else {
+    // FROM `tableName` (AS `alias`)?
+    const fromM = s.match(/FROM\s+`?(\w+)`?(?:\s+AS\s+`?(\w+)`?)?/i);
+    if (!fromM) throw new Error('Cannot parse FROM clause');
+    const mainTblName = qbStrip(fromM[1]);
+    const mainAlias   = fromM[2] ? qbStrip(fromM[2]) : mainTblName;
+    const mainTable   = qbResolveTable(mainTblName);
+    if (!mainTable) throw new Error('Table not found: ' + mainTblName);
+    aliasMap[mainAlias] = mainTable;
+
+    baseRows = qbGetRecords(mainTable.id).map(r => normaliseWithAlias(mainTable, r, mainAlias));
+    baseColNames = [];
+    mainTable.fields.forEach(f => baseColNames.push(mainAlias + '.' + f.name));
+    mainTable.fields.forEach(f => baseColNames.push(f.name));
+  }
+
+  // -- JOINs: JOIN `table` (AS `alias`)? ON left = right --
+  const joinRe = /((?:INNER|LEFT\s+OUTER|RIGHT\s+OUTER|FULL\s+OUTER|LEFT|RIGHT|FULL|CROSS)?\s*JOIN)\s+`?(\w+)`?(?:\s+AS\s+`?(\w+)`?)?\s+ON\s+(`?[\w]+`?\.`?[\w]+`?)\s*=\s*(`?[\w]+`?\.`?[\w]+`?)/gi;
+  let joinMatch;
+  let joinedRows = baseRows;
+
+  while ((joinMatch = joinRe.exec(s)) !== null) {
+    const jType    = joinMatch[1].trim().toUpperCase();
+    const jTblName = qbStrip(joinMatch[2]);
+    const jAlias   = joinMatch[3] ? qbStrip(joinMatch[3]) : jTblName;
+    const leftKey  = qbStrip(joinMatch[4]);
+    const rightKey = qbStrip(joinMatch[5]);
+
+    const jTable = qbResolveTable(jTblName);
+    if (!jTable) throw new Error('JOIN table not found: ' + jTblName);
+    aliasMap[jAlias] = jTable;
+
+    const jRecords = qbGetRecords(jTable.id).map(r => normaliseWithAlias(jTable, r, jAlias));
+
+    const newRows = [];
+    const isLeft  = jType.includes('LEFT')  || jType.includes('FULL');
+    const isRight = jType.includes('RIGHT') || jType.includes('FULL');
+
+    joinedRows.forEach(left => {
+      const lv = qbGetVal(left, leftKey);
+      const matches = jRecords.filter(right => {
+        const rv = qbGetVal(right, rightKey);
+        return lv !== undefined && rv !== undefined && String(lv) === String(rv);
+      });
+      if (matches.length) {
+        matches.forEach(right => newRows.push(qbMergeRows(left, right)));
+      } else if (isLeft) {
+        const nullRight = {};
+        jTable.fields.forEach(f => { nullRight[jAlias + '.' + f.name] = null; });
+        newRows.push(qbMergeRows(left, nullRight));
+      }
+    });
+
+    if (isRight) {
+      jRecords.forEach(right => {
+        const rv = qbGetVal(right, rightKey);
+        const hasMatch = joinedRows.some(left => String(qbGetVal(left, leftKey)) === String(rv));
+        if (!hasMatch) newRows.push(right);
+      });
+    }
+
+    joinedRows = newRows;
+    jTable.fields.forEach(f => {
+      const q = jAlias + '.' + f.name;
+      if (!baseColNames.includes(q)) baseColNames.push(q);
+    });
+    jTable.fields.forEach(f => {
+      if (!baseColNames.includes(f.name)) baseColNames.push(f.name);
+    });
+  }
+
+  // -- SELECT cols: support "alias.col AS colalias", "alias.col", "*" --
+  const colM = s.match(/^SELECT\s+([\s\S]+?)\s+FROM/i);
+  const colStr = colM ? colM[1].trim() : '*';
+
+  let outCols;
+  if (colStr === '*') {
+    outCols = baseColNames.filter(c => c.includes('.')).map(c => ({ expr: c, name: c }));
+  } else {
+    outCols = colStr.split(',').map(part => {
+      part = part.trim();
+      const asM = part.match(/^(.+?)\s+AS\s+`?(\w+)`?$/i);
+      if (asM) return { expr: qbStrip(asM[1]), name: qbStrip(asM[2]) };
+      return { expr: qbStrip(part), name: qbStrip(part) };
+    });
+  }
+
+  // -- WHERE --
+  const whereM = s.match(/WHERE\s+([\s\S]+?)(?:\s+ORDER\s+BY|\s+LIMIT|\s+GROUP\s+BY|$)/i);
+  const whereParsed = whereM ? qbParseWhereFlat(whereM[1]) : null;
+  let filteredRows = joinedRows;
+  if (whereParsed) filteredRows = joinedRows.filter(row => qbMatchFlat(row, whereParsed));
+
+  // -- ORDER BY --
+  const orderM = s.match(/ORDER\s+BY\s+(`?[\w]+`?\.`?[\w]+`?|`?[\w]+`?)\s*(ASC|DESC)?/i);
+  if (orderM) {
+    const oKey = qbStrip(orderM[1]);
+    const oDir = (orderM[2] || 'ASC').toUpperCase();
+    filteredRows = [...filteredRows].sort((a, b) => {
+      const av = qbCoerce(qbGetVal(a, oKey) ?? a[oKey]);
+      const bv = qbCoerce(qbGetVal(b, oKey) ?? b[oKey]);
+      const cmp = av == null ? -1 : bv == null ? 1 : av < bv ? -1 : av > bv ? 1 : 0;
+      return oDir === 'DESC' ? -cmp : cmp;
+    });
+  }
+
+  // -- LIMIT --
+  const limitM = s.match(/LIMIT\s+(\d+)/i);
+  if (limitM) filteredRows = filteredRows.slice(0, parseInt(limitM[1]));
+
+  return {
+    colNames: outCols.map(c => c.name),
+    rows: filteredRows.map(row =>
+      outCols.map(c => {
+        const v = qbGetVal(row, c.expr);
+        return v !== undefined ? v : null;
+      })
+    )
+  };
+}
+
+// Flat WHERE parser (works on flat row objects with table.col keys)
+function qbParseWhereFlat(whereStr) {
+  if (!whereStr) return null;
+  whereStr = whereStr.replace(/^WHERE\s+/i,'').trim();
+  return whereStr.split(/\s+AND\s+/i).map(part => {
+    part = part.trim();
+    let m = part.match(/`?([\w.]+)`?\s+(IS\s+NOT\s+NULL|IS\s+NULL)$/i);
+    if (m) return { col: m[1].replace(/`/g,''), op: m[2].toUpperCase().replace(/\s+/g,' '), val: null };
+    m = part.match(/`?([\w.]+)`?\s*(=|!=|<>|<=|>=|<|>|LIKE)\s*(.+)$/i);
+    if (m) {
+      let val = m[3].trim();
+      if (val.startsWith("'") && val.endsWith("'")) val = val.slice(1,-1).replace(/''/g,"'");
+      else val = isNaN(Number(val)) ? val : Number(val);
+      return { col: m[1].replace(/`/g,''), op: m[2].toUpperCase(), val };
+    }
+    return null;
+  }).filter(Boolean);
+}
+
+function qbMatchFlat(row, conditions) {
+  if (!conditions || !conditions.length) return true;
+  return conditions.every(cond => {
+    const key = cond.col;
+    const raw = row[key] !== undefined ? row[key] : row[key.split('.').pop()];
+    const rv = qbCoerce(raw);
+    const cv = qbCoerce(cond.val);
+    switch (cond.op) {
+      case '=': return rv == cv;
+      case '!=': case '<>': return rv != cv;
+      case '<': return rv < cv;
+      case '>': return rv > cv;
+      case '<=': return rv <= cv;
+      case '>=': return rv >= cv;
+      case 'LIKE': { const p=String(cond.val).replace(/%/g,'.*').replace(/_/g,'.'); return new RegExp('^'+p+'$','i').test(String(raw||'')); }
+      case 'IS NULL': return raw===null||raw===undefined||raw==='';
+      case 'IS NOT NULL': return raw!==null&&raw!==undefined&&raw!=='';
+      default: return true;
+    }
+  });
+}
+
+// --- SELECT entry point ---
+function qbExecSelect(sql) {
+  const { colNames, rows } = qbRunSelect(sql);
+  qbShowResultsTable(colNames, rows, rows.length + ' row' + (rows.length !== 1 ? 's' : ''));
+}
+
+// --- INSERT ---
+function qbExecInsert(sql) {
+  // INSERT INTO `table` (col1, col2) VALUES (v1, v2)
+  const s = sql.replace(/;$/, '').trim();
+  const m = s.match(/INSERT\s+INTO\s+`?([\w]+)`?\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/i);
+  if (!m) throw new Error('Cannot parse INSERT statement');
+  const table = qbResolveTable(m[1]);
+  if (!table) throw new Error('Table not found: ' + m[1]);
+
+  const colNames = m[2].split(',').map(c => c.trim().replace(/`/g,''));
+  const rawVals = m[3].match(/'[^']*'|[^,]+/g).map(v => {
+    v = v.trim();
+    if (v.startsWith("'") && v.endsWith("'")) return v.slice(1,-1).replace(/''/g,"'");
+    if (v.toUpperCase() === 'NULL') return '';
+    return isNaN(Number(v)) ? v : Number(v);
+  });
+
+  const newRow = {};
+  table.fields.forEach(f => newRow[f.id] = '');
+  colNames.forEach((name, i) => {
+    const f = qbFieldByName(table, name);
+    if (f) newRow[f.id] = rawVals[i] !== undefined ? rawVals[i] : '';
+  });
+
+  insertDataRow(table.id, newRow);
+  syncDataCard(table.id);
+  qbShowExecMsg('✓ 1 row inserted into ' + table.name + '. Total: ' + state.dataRecords[table.id].length + ' rows.', 'success');
+}
+
+// --- UPDATE ---
+function qbExecUpdate(sql) {
+  // UPDATE `table` SET col=val [, col=val] [WHERE ...]
+  const s = sql.replace(/;$/, '').replace(/--[^\n]*/g,'').trim();
+  const m = s.match(/UPDATE\s+`?([\w]+)`?\s+SET\s+(.+?)(?:\s+WHERE\s+(.+))?$/is);
+  if (!m) throw new Error('Cannot parse UPDATE statement');
+  const table = qbResolveTable(m[1]);
+  if (!table) throw new Error('Table not found: ' + m[1]);
+
+  // Parse SET pairs
+  const setPairs = m[2].split(',').map(pair => {
+    const pm = pair.trim().match(/`?([\w]+)`?\s*=\s*(.+)/);
+    if (!pm) return null;
+    let val = pm[2].trim();
+    if (val.startsWith("'") && val.endsWith("'")) val = val.slice(1,-1).replace(/''/g,"'");
+    else if (val.toUpperCase() === 'NULL') val = '';
+    else if (!isNaN(Number(val))) val = Number(val);
+    return { name: pm[1], val };
+  }).filter(Boolean);
+
+  const whereParsed = m[3] ? qbParseWhere(m[3]) : null;
+  const records = qbGetRecords(table.id);
+  let count = 0;
+
+  records.forEach(r => {
+    if (qbMatchWhere(r, table, whereParsed)) {
+      setPairs.forEach(({ name, val }) => {
+        const f = qbFieldByName(table, name);
+        if (f) r[f.id] = val;
+      });
+      count++;
+    }
+  });
+
+  syncDataCard(table.id);
+  qbShowExecMsg('✓ ' + count + ' row' + (count !== 1 ? 's' : '') + ' updated in ' + table.name + '.', 'success');
+}
+
+// --- DELETE ---
+function qbExecDelete(sql) {
+  const s = sql.replace(/;$/, '').replace(/--[^\n]*/g,'').trim();
+  const m = s.match(/DELETE\s+FROM\s+`?([\w]+)`?(?:\s+WHERE\s+(.+))?$/is);
+  if (!m) throw new Error('Cannot parse DELETE statement');
+  const table = qbResolveTable(m[1]);
+  if (!table) throw new Error('Table not found: ' + m[1]);
+
+  const whereParsed = m[2] ? qbParseWhere(m[2]) : null;
+  const records = qbGetRecords(table.id);
+  const before = records.length;
+  const kept = records.filter(r => !qbMatchWhere(r, table, whereParsed));
+  state.dataRecords[table.id] = kept;
+  const deleted = before - kept.length;
+  syncDataCard(table.id);
+  qbShowExecMsg('✓ ' + deleted + ' row' + (deleted !== 1 ? 's' : '') + ' deleted from ' + table.name + '. ' + kept.length + ' remaining.', deleted > 0 ? 'success' : 'warning');
+}
+
+// --- Display helpers ---
+function qbShowResultsTable(colNames, rows, countText) {
+  document.getElementById('qb-results-header').style.display = 'flex';
+  document.getElementById('qb-results-wrap').style.display = 'block';
+  document.getElementById('qb-results-label').textContent = 'Results';
+  document.getElementById('qb-results-count').textContent = countText;
+
+  const scroll = document.getElementById('qb-results-scroll');
+  if (!rows.length) {
+    scroll.innerHTML = '<div class="qb-exec-msg warning">Query returned 0 rows.</div>';
+    return;
+  }
+
+  const tbl = document.createElement('table');
+  tbl.className = 'qb-results-table';
+  const thead = document.createElement('thead');
+  const hrow = document.createElement('tr');
+  colNames.forEach(name => {
+    const th = document.createElement('th');
+    th.textContent = formatColName(name);
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow); tbl.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    row.forEach(val => {
+      const td = document.createElement('td');
+      const isNull = val === null || val === undefined || val === '';
+      const isNum = !isNull && !isNaN(Number(val));
+      td.textContent = isNull ? 'NULL' : String(val);
+      if (isNull) td.className = 'null-val';
+      else if (isNum) td.className = 'num-val';
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+  scroll.innerHTML = '';
+  scroll.appendChild(tbl);
+}
+
+function qbShowExecMsg(msg, type) {
+  document.getElementById('qb-results-header').style.display = 'flex';
+  document.getElementById('qb-results-wrap').style.display = 'block';
+  document.getElementById('qb-results-label').textContent = 'Result';
+  document.getElementById('qb-results-count').textContent = '';
+  document.getElementById('qb-results-scroll').innerHTML =
+    '<div class="qb-exec-msg ' + type + '">' + msg + '</div>';
+}
+
+// Wire up events
+document.getElementById('qb-table-select').addEventListener('change', qbOnTableChange);
+document.getElementById('qb-build-btn').addEventListener('click', qbBuild);
+document.getElementById('qb-execute-btn').addEventListener('click', qbExecute);
+document.getElementById('qb-copy-btn').addEventListener('click', () => {
+  const raw = document.getElementById('qb-output').value || '';
+  navigator.clipboard?.writeText(raw).then(() => notify('SQL copied!')).catch(() => notify('Copy failed'));
+});
+document.getElementById('qb-clear-btn').addEventListener('click', () => {
+  qbSetOutput('-- Select a table and operation, then click Build Query');
+  document.getElementById('qb-results-header').style.display = 'none';
+  document.getElementById('qb-results-wrap').style.display = 'none';
+});
+document.getElementById('qb-clear-history').addEventListener('click', () => {
+  QB.history = []; qbRenderHistory();
+});
+document.getElementById('qb-add-join').addEventListener('click', () => qbMakeJoinRow());
+document.getElementById('qb-add-where').addEventListener('click', () => qbMakeWhereRow('qb-where-list'));
+document.getElementById('qb-add-update-where').addEventListener('click', () => qbMakeWhereRow('qb-update-where-list'));
+document.getElementById('qb-add-delete-where').addEventListener('click', () => qbMakeWhereRow('qb-delete-where-list'));
+document.querySelectorAll('.qb-op').forEach(btn => {
+  btn.addEventListener('click', () => qbOnOpChange(btn.dataset.op));
+});
+
+// ===================== DATASHEET MODE =====================
+const DS = { tableId: null };
+
+function dsPopulateTableSelect() {
+  const sel = document.getElementById('datasheet-table-select');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— select table —</option>';
+  Object.values(state.tables).forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id; o.textContent = t.name;
+    sel.appendChild(o);
+  });
+  if (prev && state.tables[prev]) sel.value = prev;
+}
+
+function dsRenderTable(tableId) {
+  DS.tableId = tableId;
+  const table   = state.tables[tableId];
+  const records = state.dataRecords[tableId] || [];
+  const empty   = document.getElementById('datasheet-empty');
+  const tbl     = document.getElementById('datasheet-table');
+  const thead   = document.getElementById('datasheet-thead');
+  const tbody   = document.getElementById('datasheet-tbody');
+  const addBtn  = document.getElementById('datasheet-add-row-btn');
+  const countEl = document.getElementById('datasheet-row-count');
+
+  if (!table) {
+    empty.style.display = 'flex'; tbl.style.display = 'none';
+    addBtn.style.display = 'none';
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  empty.style.display = 'none'; tbl.style.display = '';
+  addBtn.style.display = '';
+
+  // Header — clickable for sort
+  thead.innerHTML = '';
+  const htr = document.createElement('tr');
+  const numTh = document.createElement('th'); numTh.textContent = '#';
+  htr.appendChild(numTh);
+  table.fields.forEach(f => {
+    const th = document.createElement('th');
+    const hdr = document.createElement('span');
+    hdr.className = 'sort-header';
+    hdr.title = f.type;
+    if (f.pk) { const b = document.createElement('span'); b.className = 'pk-badge'; b.textContent = 'PK'; hdr.appendChild(b); }
+    if (f.autonum) { const ab = document.createElement('span'); ab.className = 'an-badge'; ab.textContent = 'AN'; hdr.appendChild(ab); }
+    hdr.appendChild(document.createTextNode(formatColName(f.name)));
+    const icon = sortIcon(tableId, f.id);
+    if (icon) { const si = document.createElement('span'); si.className = 'sort-icon'; si.textContent = icon; hdr.appendChild(si); }
+    hdr.addEventListener('click', () => {
+      cycleSortState(tableId, f.id);
+      dsRenderTable(tableId);
+    });
+    th.appendChild(hdr);
+    htr.appendChild(th);
+  });
+  const delTh = document.createElement('th'); htr.appendChild(delTh);
+  thead.appendChild(htr);
+
+  // Body — use sorted records (for display only, indices map back to original)
+  const sorted = getSortedRecords(tableId);
+  tbody.innerHTML = '';
+  sorted.forEach((r, i) => tbody.appendChild(dsMakeRow(tableId, i, r, table.fields)));
+  tbody.appendChild(dsMakeNewRow(tableId, table.fields));
+
+  if (countEl) countEl.textContent = records.length + ' row' + (records.length !== 1 ? 's' : '');
+
+  dsAutoSizeCols(tableId);
+}
+
+function dsMakeRow(tableId, idx, record, fields) {
+  const tr = document.createElement('tr');
+  tr.dataset.rowIdx = idx;
+
+  const numTd = document.createElement('td'); numTd.textContent = idx + 1; tr.appendChild(numTd);
+
+  fields.forEach(f => {
+    const td = document.createElement('td');
+    const val = record[f.id] !== undefined ? record[f.id] : '';
+    const fkRef = getFKRef(tableId, f.id);
+    if (fkRef) {
+      const sel = document.createElement('select');
+      sel.className = 'data-cell-select';
+      sel.innerHTML = buildFKOptions(fkRef, val);
+      sel.addEventListener('change', () => {
+        if (state.dataRecords[tableId]?.[idx] !== undefined) {
+          state.dataRecords[tableId][idx][f.id] = sel.value;
+          dsUpdateCount(tableId);
+        }
+      });
+      td.appendChild(sel);
+    } else {
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.value = String(val);
+      inp.addEventListener('change', () => {
+        if (state.dataRecords[tableId]?.[idx] !== undefined) {
+          const field = state.tables[tableId]?.fields.find(fi => fi.id === f.id);
+          let v = inp.value;
+          if (field && NUMERIC_TYPES.includes(field.type)) v = v === '' ? '' : Number(v);
+          state.dataRecords[tableId][idx][f.id] = v;
+        }
+      });
+      dcAttachToInput(inp, tableId, f.id);
+      td.appendChild(inp);
+    }
+    tr.appendChild(td);
+  });
+
+  const delTd = document.createElement('td');
+  const delBtn = document.createElement('button');
+  delBtn.className = 'row-del-btn'; delBtn.textContent = '✕';
+  delBtn.addEventListener('click', () => {
+    if (!confirm('Delete this row?')) return;
+    state.dataRecords[tableId].splice(idx, 1);
+    dsRenderTable(tableId);
+    syncDataCard(tableId);
+  });
+  delTd.appendChild(delBtn); tr.appendChild(delTd);
+  return tr;
+}
+
+function dsMakeNewRow(tableId, fields) {
+  const tr = document.createElement('tr');
+  tr.className = 'ds-new-row';
+
+  const numTd = document.createElement('td'); numTd.textContent = '*'; tr.appendChild(numTd);
+
+  const inputs = [];
+  fields.forEach(f => {
+    const td = document.createElement('td');
+    const fkRef = getFKRef(tableId, f.id);
+    if (fkRef) {
+      const sel = document.createElement('select');
+      sel.className = 'data-cell-select';
+      sel.dataset.newfield = f.id;   // needed by firstFocusableInRow
+      sel.innerHTML = buildFKOptions(fkRef, '');
+      inputs.push({ el: sel, fid: f.id, type: f.type });
+      td.appendChild(sel);
+    } else {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.dataset.newfield = f.id;   // needed by firstFocusableInRow
+      if (f.autonum) {
+        inp.placeholder = 'auto';
+        inp.style.cssText = 'color:var(--text3);font-style:italic';
+        inp.title = 'Autonumber — leave blank to auto-assign';
+      } else {
+        inp.placeholder = formatColName(f.name);
+      }
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') dsCommitNewRow(tableId); });
+      inputs.push({ el: inp, fid: f.id, type: f.type });
+      dcAttachToInput(inp, tableId, f.id);
+      td.appendChild(inp);
+    }
+    tr.appendChild(td);
+  });
+
+  // commit on blur out of new row
+  fields.forEach((f, i) => {
+    const inp = inputs[i]?.el;
+    if (inp) inp.addEventListener('blur', () => {
+      setTimeout(() => {
+        const focused = tr.querySelector(':focus');
+        if (!focused) dsCommitNewRow(tableId);
+      }, 120);
+    });
+  });
+
+  tr.appendChild(document.createElement('td'));
+  tr._inputs = inputs;
+  return tr;
+}
+
+function dsCommitNewRow(tableId) {
+  const tbody = document.getElementById('datasheet-tbody');
+  const newTr = tbody?.querySelector('.ds-new-row');
+  if (!newTr || !newTr._inputs) return;
+  const record = {};
+  let hasValue = false;
+  newTr._inputs.forEach(({ el, fid, type }) => {
+    let v = el.value;
+    if (v !== '' && v !== '— none —') hasValue = true;
+    if (NUMERIC_TYPES.includes(type)) v = v === '' ? '' : Number(v);
+    record[fid] = v;
+  });
+  if (!hasValue) return;
+  insertDataRow(tableId, record);
+  dsRenderTable(tableId);
+  syncDataCard(tableId);
+}
+
+function dsAutoSizeCols(tableId) {
+  const table = state.tables[tableId];
+  const records = state.dataRecords[tableId] || [];
+  const tbl = document.getElementById('datasheet-table');
+  if (!table || !tbl) return;
+
+  let cg = tbl.querySelector('colgroup');
+  if (cg) cg.remove();
+  cg = document.createElement('colgroup');
+
+  const mkCol = w => { const c = document.createElement('col'); c.style.width = w + 'px'; return c; };
+  cg.appendChild(mkCol(32)); // row number
+
+  table.fields.forEach(f => {
+    let max = measureDataText(formatColName(f.name)) + 4;
+    const fkRef = getFKRef(tableId, f.id);
+    if (fkRef) {
+      const refTable = state.tables[fkRef.refTableId];
+      const refRecs = state.dataRecords[fkRef.refTableId] || [];
+      const refField = refTable?.fields.find(fi => fi.id === fkRef.refFieldId);
+      const dispField = refTable?.fields.find(fi => /^(name|title|label|username|email|display)$/i.test(fi.name))
+        || refTable?.fields.find(fi => fi.id !== fkRef.refFieldId) || refTable?.fields[0];
+      max = Math.max(max, measureDataText('— none —'));
+      refRecs.forEach(r => {
+        const val = refField ? String(r[refField.id] ?? '') : '';
+        const label = dispField && dispField.id !== fkRef.refFieldId ? String(r[dispField.id] ?? val) : val;
+        max = Math.max(max, measureDataText(label !== val ? label + ' (' + val + ')' : label) + 24);
+      });
+    } else {
+      records.forEach(r => { max = Math.max(max, measureDataText(String(r[f.id] ?? ''))); });
+    }
+    cg.appendChild(mkCol(Math.min(320, Math.max(60, max + 20))));
+  });
+  cg.appendChild(mkCol(28)); // delete
+  tbl.insertBefore(cg, tbl.firstChild);
+}
+
+function dsUpdateCount(tableId) {
+  const countEl = document.getElementById('datasheet-row-count');
+  const n = (state.dataRecords[tableId] || []).length;
+  if (countEl) countEl.textContent = n + ' row' + (n !== 1 ? 's' : '');
+}
+
+// Mode switching
+let dataMode = 'cards'; // 'cards' | 'sheet'
+
+function setDataMode(mode) {
+  dataMode = mode;
+  const cardsPane = document.getElementById('data-cards-pane');
+  const sheetPane = document.getElementById('data-datasheet-pane');
+  const btnCards  = document.getElementById('tb-data-mode-cards');
+  const btnSheet  = document.getElementById('tb-data-mode-sheet');
+  const zoomBtns  = ['tb-zoom-in-data','tb-zoom-out-data','tb-reset-data','tb-fit-data',
+                      'zoom-indicator-data','tb-align-h','tb-align-v','tb-snap-data'];
+
+  if (mode === 'cards') {
+    cardsPane.style.display = 'flex';
+    sheetPane.style.display = 'none';
+    btnCards?.classList.add('active');
+    btnSheet?.classList.remove('active');
+    zoomBtns.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    });
+    document.querySelectorAll('.status-sep').forEach(s => s.style.display = '');
+  } else {
+    cardsPane.style.display = 'none';
+    sheetPane.style.display = 'flex';
+    btnCards?.classList.remove('active');
+    btnSheet?.classList.add('active');
+    // hide zoom/align controls in sheet mode
+    zoomBtns.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    dsPopulateTableSelect();
+    if (DS.tableId && state.tables[DS.tableId]) {
+      document.getElementById('datasheet-table-select').value = DS.tableId;
+      dsRenderTable(DS.tableId);
+    }
+  }
+}
+
+document.getElementById('tb-data-mode-cards')?.addEventListener('click', () => setDataMode('cards'));
+document.getElementById('tb-data-mode-sheet')?.addEventListener('click', () => setDataMode('sheet'));
+
+document.getElementById('datasheet-table-select')?.addEventListener('change', e => {
+  dsRenderTable(e.target.value || null);
+});
+
+document.getElementById('datasheet-add-row-btn')?.addEventListener('click', () => {
+  if (!DS.tableId) return;
+  dsCommitNewRow(DS.tableId);
+  // Focus first non-autonumber input/select of the new row
+  const tbody = document.getElementById('datasheet-tbody');
+  const newRow = tbody?.querySelector('tr.ds-new-row');
+  const first = firstFocusableInRow(newRow, DS.tableId);
+  if (first) { first.focus(); first.select?.(); }
+});
+
+// ===================== TABS =====================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const sheet = tab.dataset.sheet;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.canvas-sheet').forEach(s => s.classList.remove('active'));
+    document.getElementById('sheet-' + sheet).classList.add('active');
+    state.currentSheet = sheet;
+    document.getElementById('schema-toolbar').style.display = sheet === 'schema' ? 'flex' : 'none';
+    document.getElementById('data-toolbar').style.display = sheet === 'data' ? 'flex' : 'none';
+    if (sheet === 'grid') initGridIfNeeded();
+    if (sheet === 'query') initQueryBuilder();
+  });
+});
+
+// ===================== CONTEXT MENU =====================
+const ctxMenu = document.getElementById('ctx-menu');
+let ctxPos = { x: 0, y: 0 };
+
+document.getElementById('viewport-schema').addEventListener('contextmenu', e => {
+  e.preventDefault();
+  ctxPos = { x: e.clientX, y: e.clientY };
+  ctxMenu.style.left = e.clientX + 'px';
+  ctxMenu.style.top = e.clientY + 'px';
+  ctxMenu.classList.add('show');
+});
+
+document.addEventListener('click', () => ctxMenu.classList.remove('show'));
+
+document.getElementById('ctx-add-table').addEventListener('click', () => {
+  const worldRect = document.getElementById('world-schema').getBoundingClientRect();
+  const s = schemaVP.scale;
+  const x = (ctxPos.x - worldRect.left) / s;
+  const y = (ctxPos.y - worldRect.top) / s;
+  createTable(Math.max(0, x - 120), Math.max(0, y - 20));
+});
+
+document.getElementById('ctx-clear').addEventListener('click', () => {
+  if (confirm('Clear all tables and relations?')) {
+    Object.keys(state.tables).forEach(id => {
+      document.getElementById('tc_' + id)?.remove();
+      document.getElementById('dc_' + id)?.remove();
+    });
+    state.tables = {};
+    state.relations = [];
+    state.dataRecords = {};
+    state.dataCards = {};
+    renderAllRelations();
+  }
+});
+
+// ===================== ADD TABLE BUTTON =====================
+document.getElementById('btn-add-table').addEventListener('click', () => {
+  const rect = document.getElementById('viewport-schema').getBoundingClientRect();
+  const s = schemaVP.scale;
+  const count = Object.keys(state.tables).length;
+  const x = (rect.width / 2 - schemaVP.panX) / s + count * 20;
+  const y = (rect.height / 2 - schemaVP.panY) / s + count * 10;
+  createTable(Math.max(0, x - 120), Math.max(0, y - 60));
+  if (state.currentSheet !== 'schema') {
+    document.querySelector('.tab[data-sheet="schema"]').click();
+  }
+});
+
+// ===================== HELPERS =====================
+function formatColName(name) {
+  let s = name.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2');
+  s = s.replace(/(^|\s)\S/g, c => c.toUpperCase());
+  s = s.replace(/(?<![a-z])Id(?![a-z])/gi, 'ID');
+  return s;
+}
+
+// Hidden ruler for measuring text width
+const _ruler = document.createElement('span');
+_ruler.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;pointer-events:none;top:-9999px;left:-9999px;';
+document.body.appendChild(_ruler);
+
+function measureText(text, font) {
+  _ruler.style.font = font;
+  _ruler.textContent = text || '';
+  return _ruler.offsetWidth;
+}
+
+function sizeInput(input, minPx, extraPx) {
+  const cs = getComputedStyle(input);
+  const w = measureText(input.value || input.placeholder || '', cs.font);
+  input.style.width = Math.max(minPx, w + (extraPx || 10)) + 'px';
+}
+
+function sizeAllInputsInCard(card) {
+  card.querySelectorAll('.field-name-input').forEach(inp => sizeInput(inp, 80, 12));
+  const tni = card.querySelector('.table-name-input');
+  if (tni) sizeInput(tni, 80, 16);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+}
+
+// ===================== INIT =====================
+schemaVP.reset();
+dataVP.reset();
+updateStatusBar();
+</script>
+</body>
+</html>
